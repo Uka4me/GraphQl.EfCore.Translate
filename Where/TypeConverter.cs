@@ -16,8 +16,8 @@ static class TypeConverter
 
         var hasNull = values.Contains(null);
 
-        var type = property.GetNullabilityInfo().Type;
-        if (!property.IsNullable() && hasNull)
+        var type = GetUnderlyingType(property);
+        if (!type.IsNullable() && hasNull)
         {
             throw new($"Null passed to In expression for non nullable type '{type.FullName}'.");
         }
@@ -28,6 +28,26 @@ static class TypeConverter
             list.Add(null);
         }
         return list;
+    }
+
+    static Type GetUnderlyingType(MemberInfo member)
+    {
+        switch (member.MemberType)
+        {
+            case MemberTypes.Event:
+                return ((EventInfo)member).EventHandlerType;
+            case MemberTypes.Field:
+                return ((FieldInfo)member).FieldType;
+            case MemberTypes.Method:
+                return ((MethodInfo)member).ReturnType;
+            case MemberTypes.Property:
+                return ((PropertyInfo)member).PropertyType;
+            default:
+                throw new ArgumentException
+                (
+                 "Input MemberInfo must be if type EventInfo, FieldInfo, MethodInfo, or PropertyInfo"
+                );
+        }
     }
 
     static bool ParseBoolean(string value)
