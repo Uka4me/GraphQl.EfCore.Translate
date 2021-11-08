@@ -154,8 +154,23 @@ static class TypeConverter
 
         if (type.TryGetEnumType(out var enumType))
         {
-            return values.Select(s => Enum.Parse(enumType, s, true))
-                .ToList();
+            Type listType = null;
+
+            if (!type.IsValueType || Nullable.GetUnderlyingType(type) != null)
+            {
+                listType = typeof(List<>).MakeGenericType(typeof(Nullable<>).MakeGenericType(enumType));
+            }
+            else
+            {
+                listType = typeof(List<>).MakeGenericType(enumType);
+            }
+            IList list = (IList)Activator.CreateInstance(listType);
+
+            foreach (var s in values) {
+                list.Add(Enum.Parse(enumType, s, true));
+            }
+
+            return list;
         }
 
         throw new($"Could not convert strings to {type.FullName}.");

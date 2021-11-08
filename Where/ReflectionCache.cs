@@ -167,9 +167,22 @@ static class ReflectionCache
             return dateTimeOffsetNullableListContains;
         }
 
+        if (type.TryGetEnumType(out var enumType))
+        {
+            if (!type.IsValueType || Nullable.GetUnderlyingType(type) != null) {
+                return GetContains(typeof(Nullable<>).MakeGenericType(enumType));
+            }
+
+            return GetContains(enumType);
+        }
+
         return null;
     }
 
+    static MethodInfo GetContains(Type type)
+    {
+        return typeof(List<>).MakeGenericType(type).GetMethod("Contains")!;
+    }
     static MethodInfo GetContains<T>()
     {
         return typeof(List<T>).GetMethod("Contains")!;
