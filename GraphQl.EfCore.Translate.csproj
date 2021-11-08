@@ -5,6 +5,7 @@
     <RepositoryUrl>https://github.com/Uka4me/GraphQl.EfCore.Translate</RepositoryUrl>
     <PackageTags>GraphQL; EntityFrameworkCore; .NetCore; graphql-dotnet</PackageTags>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Version>1.0.3</Version>
   </PropertyGroup>
 
   <ItemGroup>

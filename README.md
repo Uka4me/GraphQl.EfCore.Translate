@@ -7,7 +7,7 @@ The package adds extensions to EntityFrameworkCore that allow you to convert a G
 ### Install
 
 ```
-Install-Package GraphQl.EfCore.Translate -Version 1.0.0
+Install-Package GraphQl.EfCore.Translate
 ```
 
 ### A simple example
