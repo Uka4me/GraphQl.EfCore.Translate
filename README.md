@@ -4,9 +4,19 @@ The package adds extensions to EntityFrameworkCore that allow you to convert a G
 
 ## Start
 
+### Install
+
+```
+Install-Package GraphQl.EfCore.Translate -Version 1.0.0
+```
+
 ### A simple example
 
 ```
+using GraphQl.EfCore.Translate;
+
+...
+
 Field<ListGraphType<UserObject>, List<User>>("Users")
   .Argument<IntGraphType>("Take")
   .Argument<IntGraphType>("Skip")
