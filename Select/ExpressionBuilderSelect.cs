@@ -83,9 +83,9 @@ namespace GraphQl.EfCore.Translate
 						var f = fields.FirstOrDefault(x => x.Path == memberName);
 						Expression where = sourceMember;
 
-						try
+						if (f != null)
 						{
-							if (f != null)
+							try
 							{
 								if (f.Arguments.ContainsKey("Where"))
 								{
@@ -106,25 +106,49 @@ namespace GraphQl.EfCore.Translate
 									);
 								}
 
+							}
+							catch
+							{
+								throw new($"Failed to execute Where on path \"{f.Path}\".");
+							}
+
+							try
+							{
 								if (f.Arguments.ContainsKey("OrderBy"))
 								{
 									where = OrderBy(where, sourceElementType, (string)f.Arguments["OrderBy"]);
 								}
 
+							}
+							catch
+							{
+								throw new($"Failed to execute OrderBy on path \"{f.Path}\".");
+							}
+
+							try
+							{
 								if (f.Arguments.ContainsKey("Skip"))
 								{
 									where = Skip(where, new Type[] { sourceElementType }, (int)f.Arguments["Skip"]);
 								}
 
+							}
+							catch
+							{
+								throw new($"Failed to execute Skip on path \"{f.Path}\".");
+							}
+
+							try
+							{
 								if (f.Arguments.ContainsKey("Take"))
 								{
 									where = Take(where, new Type[] { sourceElementType }, (int)f.Arguments["Take"]);
 								}
 							}
-						}
-						catch
-						{
-
+							catch
+							{
+								throw new($"Failed to execute Take on path \"{f.Path}\".");
+							}
 						}
 
 						targetValue = Expression.Call(typeof(Enumerable), nameof(Enumerable.Select),
