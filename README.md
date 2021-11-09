@@ -8,13 +8,13 @@ The package adds extensions to EntityFrameworkCore that allow you to transform a
 
 ### Install
 
-```
+```powershell
 Install-Package GraphQl.EfCore.Translate
 ```
 
 ### A simple example
 
-```
+```C#
 using GraphQl.EfCore.Translate;
 
 ...
@@ -39,7 +39,7 @@ Field<ListGraphType<UserObject>, List<User>>("Users")
 
 Now you can run a simple GraphQL query. We will get the first 30 user records and in the related data we will take only those cities in which the population is more than 1000 people.
 
-```
+```graphql
 query {
   Users(
     Skip: 0,
@@ -71,7 +71,7 @@ query {
 
 This query will be equivalent to the following expression
 
-```
+```C#
 var query = dbContext.Users
   .Where(x => EF.Functions.Like(x.Name, "%John%"))
   .OrderByDescending(x => x.CreatedAt)
