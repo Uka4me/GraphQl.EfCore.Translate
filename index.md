@@ -1,37 +1,107 @@
-## Welcome to GitHub Pages
+[![NuGet version](https://badge.fury.io/nu/GraphQl.EfCore.Translate.svg)](https://badge.fury.io/nu/GraphQl.EfCore.Translate)
 
-You can use the [editor on GitHub](https://github.com/Uka4me/GraphQl.EfCore.Translate/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+The package adds extensions to EntityFrameworkCore that allow you to transform a GraphQL query into an EntityFrameworkCore query. The project solves the problem of a large amount of data dumping, filtering related data and adding calculated fields.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+## Documentation
+[Wiki](https://github.com/Uka4me/GraphQl.EfCore.Translate/wiki)
 
-### Markdown
+## Start
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+### Install
 
-```markdown
-Syntax highlighted code block
+Install the package
 
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+```powershell
+Install-Package GraphQl.EfCore.Translate
 ```
 
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
+Connect services in Startup.cs file
 
-### Jekyll Themes
+```C#
+public void ConfigureServices(IServiceCollection services)
+{
+    ...
+    services.AddGraphQLTranslate();
+    ...
+}
+```
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/Uka4me/GraphQl.EfCore.Translate/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+### Usage
 
-### Support or Contact
+```C#
+using GraphQl.EfCore.Translate;
+...
+Field<ListGraphType<StudentObject>, List<Student>>("students")
+  .Argument<IntGraphType>("take")
+  .Argument<IntGraphType>("skip")
+  .Argument<StringGraphType>("orderBy")
+  .Argument<ListGraphType<WhereExpressionGraph>>("where")
+  .Resolve().WithScope().WithService<SchoolContext>()
+  .ResolveAsync((context, dbContext) =>
+  {
+    var query = dbContext.Students
+                              .GraphQlWhere(context)
+                              .GraphQlOrder(context)
+                              .GraphQlPagination(context)
+                              .GraphQlSelect(context);
+    return query.ToListAsync();
+  });
+```
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+Now you can run a simple GraphQL query. We will get the first 30 students and in the linked data we will only take courses with an "A" or "B" grade.
+
+```graphql
+query {
+  students(
+    skip: 0,
+    take: 30,
+    orderBy: "enrollmentDate desc",
+    where: [
+      {
+        path: "enrollmentDate", comparison: "lessThanOrEqual", value: "2005-01-01"
+      }
+    ]
+  ) {
+    iD
+    lastName
+    enrollmentDate
+    enrollments(
+      orderBy: "grade",
+      where: [
+        {
+          path: "grade", comparison: "in", value: ["A", "B"]
+        }
+      ]
+    ) {
+      grade
+      course {
+        title
+      }
+    }
+  }
+}
+```
+
+This query will be equivalent to the following expression
+
+```C#
+var query = dbContext.Students
+  .Where(x => x.EnrollmentDate <= DateTime.Parse("01.01.2005"))
+  .OrderByDescending(x => x.EnrollmentDate)
+  .Skip(0)
+  .Take(30)
+  .Select(x => new User {
+    ID = x.ID,
+    LastName = x.LastName,
+    EnrollmentDate = x.EnrollmentDate,
+    Enrollments = x.Enrollments
+                .Where(c => (new string[] {"A", "B"}).Contains(c.Grade))
+                .OrderBy(x => x.Grade)
+                .Select(c => new Enrollment {
+                  Grade = c.Grade,
+                  Course = new Course {
+		     Title = c.Course.Title
+		  }
+                })
+  });
+```
