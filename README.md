@@ -1,6 +1,8 @@
 # GraphQl.EfCore.Translate
 
-The package adds extensions to EntityFrameworkCore that allow you to convert a GraphQl request to an EntityFrameworkCore request.
+[![NuGet version](https://badge.fury.io/nu/GraphQl.EfCore.Translate.svg)](https://www.nuget.org/packages/GraphQl.EfCore.Translate/)
+
+The package adds extensions to EntityFrameworkCore that allow you to transform a GraphQL query into an EntityFrameworkCore query. The project solves the problem of a large amount of data dumping, filtering related data and adding calculated fields.
 
 ## Start
 
@@ -35,7 +37,7 @@ Field<ListGraphType<UserObject>, List<User>>("Users")
   });
 ```
 
-Now you can run a simple GrapQl query. We will get the first 30 user records and in the related data we will take only those cities in which the population is more than 1000 people.
+Now you can run a simple GraphQL query. We will get the first 30 user records and in the related data we will take only those cities in which the population is more than 1000 people.
 
 ```
 query {
@@ -67,7 +69,7 @@ query {
 }
 ```
 
-This request will be converted to
+This query will be equivalent to the following expression
 
 ```
 var query = dbContext.Users
