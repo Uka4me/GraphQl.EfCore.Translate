@@ -14,7 +14,7 @@ namespace GraphQL.DotNet.Queries
 		protected void InitializeStudentQuery()
 		{
 			Field<ListGraphType<StudentObject>>(
-			  "Students",
+			  "students",
 			  arguments: MainQuery.commonArguments,
 			  resolve: context => {
 				  using var scope = context.RequestServices.CreateScope();

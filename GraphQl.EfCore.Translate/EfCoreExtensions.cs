@@ -29,9 +29,9 @@ namespace GraphQl.EfCore.Translate
 
 		public static IQueryable<T> GraphQlWhere<T>(this IQueryable<T> queryable, IResolveFieldContext<object> context)
 		{
-			if (context.HasArgument("Where"))
+			if (context.HasArgument("where"))
 			{
-				var wheres = context.GetArgument<List<WhereExpression>>("Where")!;
+				var wheres = context.GetArgument<List<WhereExpression>>("where")!;
 				
 				var predicate = ExpressionBuilderWhere<T>.BuildPredicate(wheres);
 				queryable = queryable.Where(predicate);
@@ -42,9 +42,9 @@ namespace GraphQl.EfCore.Translate
 
 		public static IQueryable<T> GraphQlPagination<T>(this IQueryable<T> queryable, IResolveFieldContext<object> context)
 		{
-			if (context.HasArgument("Take") || context.HasArgument("Skip")) {
-				var take = context.GetArgument<int>("Take", 0);
-				var skip = context.GetArgument<int>("Skip", 0);
+			if (context.HasArgument("take") || context.HasArgument("skip")) {
+				var take = context.GetArgument<int>("take", 0);
+				var skip = context.GetArgument<int>("skip", 0);
 
 				queryable = queryable.Skip(skip);
 
@@ -59,9 +59,9 @@ namespace GraphQl.EfCore.Translate
 
 		public static IQueryable<T> GraphQlOrder<T>(this IQueryable<T> queryable, IResolveFieldContext<object> context, string defaultOrder = "")
 		{
-			if (context.HasArgument("OrderBy"))
+			if (context.HasArgument("orderBy"))
 			{
-				var orders = context.GetArgument<string>("OrderBy", defaultOrder);
+				var orders = context.GetArgument<string>("orderBy", defaultOrder);
 
 				queryable = queryable.OrderBy(orders);
 			}
@@ -76,7 +76,7 @@ namespace GraphQl.EfCore.Translate
 		{
 			string command = isThenBy ? (desc ? "ThenByDescending" : "ThenBy") : (desc ? "OrderByDescending" : "OrderBy");
 			var type = typeof(T);
-			var property = type.GetProperty(orderByProperty);
+			var property = type.GetProperty(orderByProperty, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.FlattenHierarchy);
 			var parameter = Expression.Parameter(type, "p");
 			var propertyAccess = Expression.MakeMemberAccess(parameter, property);
 			var orderByExpression = Expression.Lambda(propertyAccess, parameter);
@@ -164,7 +164,6 @@ namespace GraphQl.EfCore.Translate
 				}
 			};
 
-			// GetField(context.SubFields.Select(x => x.Value).Single(x => x.Name == "Data").SelectionSet.Children.Select(x => x as Field), "");
 			TransformationFieldToNodeGraph(fields, "");
 			return list.ToList();
 		}

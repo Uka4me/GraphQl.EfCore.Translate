@@ -13,7 +13,7 @@ namespace GraphQl.EfCore.Translate
         {
             services.AddSingleton<StringComparisonGraph>();
             services.AddSingleton<WhereExpressionGraph>();
-            services.AddSingleton<OrderByGraph>();
+            //services.AddSingleton<OrderByGraph>();
             services.AddSingleton<ComparisonGraph>();
             services.AddSingleton<ConnectorGraph>();
 

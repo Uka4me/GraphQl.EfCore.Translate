@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -16,6 +17,7 @@ namespace GraphQl.EfCore.Translate
     public static class ExpressionBuilderSelect<T>
     {
 		public static ConcurrentDictionary<string, Func<Expression, Expression>> CalculatedFields = new();
+		const BindingFlags bindingFlagsPublic = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase | BindingFlags.FlattenHierarchy;
 
 		public static Func<Expression, Expression> AddCalculatedField(string path, Func<Expression, Expression> func) {
 			return CalculatedFields.GetOrAdd(path, x => func);
@@ -34,16 +36,17 @@ namespace GraphQl.EfCore.Translate
 			foreach (var memberGroup in memberPaths.GroupBy(path => path[depth]))
 			{
 				var memberName = memberGroup.Key;
-				var n = $"{source.Type.Name}.{memberName}";
 
-                /*var m1 = typeof(PropertyCache<>).MakeGenericType(target.Type).GetMethod("GetProperty", new Type[] { typeof(string) });
+				/*var m1 = typeof(PropertyCache<>).MakeGenericType(target.Type).GetMethod("GetProperty", new Type[] { typeof(string) });
                 var targetMember = (MemberExpression)(typeof(Property<>).MakeGenericType(target.Type).GetProperty("Left")).GetValue(m1.Invoke(null, new[] { memberName }));
                 var m2 = typeof(PropertyCache<>).MakeGenericType(source.Type).GetMethod("GetProperty", new Type[] { typeof(string) });
                 var sourceMember = (MemberExpression)(typeof(Property<>).MakeGenericType(source.Type).GetProperty("Left")).GetValue(m2.Invoke(null, new[] { memberName }));
 				*/
 
-                var targetMember = Expression.PropertyOrField(target, memberName);
-				var sourceMember = Expression.PropertyOrField(source, memberName);
+				var propertyOrFieldTarget = GetPropertyOrField(target.Type, memberName);
+				var propertyOrFieldSource = GetPropertyOrField(source.Type, memberName);
+				var targetMember = Expression.PropertyOrField(target, propertyOrFieldTarget.Name);
+				var sourceMember = Expression.PropertyOrField(source, propertyOrFieldSource.Name);
 				var childMembers = memberGroup.Where(path => depth + 1 < path.Length).ToList();
 
 				var calculatedFields = (ConcurrentDictionary<string, Func<Expression, Expression>>)(typeof(ExpressionBuilderSelect<>).MakeGenericType(source.Type).GetField("CalculatedFields").GetValue(null));
@@ -76,11 +79,12 @@ namespace GraphQl.EfCore.Translate
 						{
 							try
 							{
-								if (f.Arguments.ContainsKey("Where"))
+								if (f.Arguments.ContainsKey("where"))
 								{
-									string jsonString = JsonSerializer.Serialize(f.Arguments["Where"]);
+									string jsonString = JsonSerializer.Serialize(f.Arguments["where"]);
 									var options = new JsonSerializerOptions();
 									options.Converters.Add(new JsonStringEnumConverter());
+									options.PropertyNameCaseInsensitive = true;
 									IEnumerable<WhereExpression> w = JsonSerializer.Deserialize<IEnumerable<WhereExpression>>(jsonString, options);
 
 									var m = typeof(ExpressionBuilderWhere<>).MakeGenericType(sourceElementType).GetMethod("BuildPredicate", new Type[] { typeof(IEnumerable<WhereExpression>) });
@@ -103,9 +107,9 @@ namespace GraphQl.EfCore.Translate
 
 							try
 							{
-								if (f.Arguments.ContainsKey("OrderBy"))
+								if (f.Arguments.ContainsKey("orderBy"))
 								{
-									where = OrderBy(where, sourceElementType, (string)f.Arguments["OrderBy"]);
+									where = OrderBy(where, sourceElementType, (string)f.Arguments["orderBy"]);
 								}
 
 							}
@@ -116,9 +120,9 @@ namespace GraphQl.EfCore.Translate
 
 							try
 							{
-								if (f.Arguments.ContainsKey("Skip"))
+								if (f.Arguments.ContainsKey("skip"))
 								{
-									where = Skip(where, new Type[] { sourceElementType }, (int)f.Arguments["Skip"]);
+									where = Skip(where, new Type[] { sourceElementType }, (int)f.Arguments["skip"]);
 								}
 
 							}
@@ -129,9 +133,9 @@ namespace GraphQl.EfCore.Translate
 
 							try
 							{
-								if (f.Arguments.ContainsKey("Take"))
+								if (f.Arguments.ContainsKey("take"))
 								{
-									where = Take(where, new Type[] { sourceElementType }, (int)f.Arguments["Take"]);
+									where = Take(where, new Type[] { sourceElementType }, (int)f.Arguments["take"]);
 								}
 							}
 							catch
@@ -204,7 +208,8 @@ namespace GraphQl.EfCore.Translate
 			var command = isThenBy ? (desc ? nameof(Enumerable.ThenByDescending) : nameof(Enumerable.ThenBy)) : (desc ? nameof(Enumerable.OrderByDescending) : nameof(Enumerable.OrderBy));
 
 			var parameter = Expression.Parameter(type, "p");
-			var sourceMember = Expression.PropertyOrField(parameter, orderByProperty);
+			var propertyOrField = GetPropertyOrField(parameter.Type, orderByProperty);
+			var sourceMember = Expression.PropertyOrField(parameter, propertyOrField.Name);
 
 			return Expression.Call(
 				typeof(Enumerable),
@@ -249,6 +254,10 @@ namespace GraphQl.EfCore.Translate
 				source,
 				Expression.Constant(count, typeof(int))
 			);
+		}
+
+		static MemberInfo GetPropertyOrField(Type type, string name) {
+			return type.GetProperty(name, bindingFlagsPublic) ?? (MemberInfo?)type.GetField(name, bindingFlagsPublic);
 		}
 	}
 }

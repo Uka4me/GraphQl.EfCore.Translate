@@ -15,19 +15,19 @@ namespace GraphQL.DotNet.Queries
 		{
 			new QueryArgument<IntGraphType>
 			{
-				Name = "Take"
+				Name = "take"
 			},
 			new QueryArgument<IntGraphType>
 			{
-				Name = "Skip"
+				Name = "skip"
 			},
 			new QueryArgument<StringGraphType>
 			{
-				Name = "OrderBy"
+				Name = "orderBy"
 			},
 			new QueryArgument<ListGraphType<WhereExpressionGraph>>
 			{
-				Name = "Where"
+				Name = "where"
 			}
 		});
 
