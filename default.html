@@ -1,1 +1,156 @@
-123
+
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>GraphQl.EfCore.Translate | The package adds extensions to EntityFrameworkCore that allow you to transform a GraphQL query into an EntityFrameworkCore query.</title>
+<meta name="generator" content="Jekyll v3.9.0" />
+<meta property="og:title" content="GraphQl.EfCore.Translate" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="The package adds extensions to EntityFrameworkCore that allow you to transform a GraphQL query into an EntityFrameworkCore query." />
+<meta property="og:description" content="The package adds extensions to EntityFrameworkCore that allow you to transform a GraphQL query into an EntityFrameworkCore query." />
+<link rel="canonical" href="https://uka4me.github.io/GraphQl.EfCore.Translate/" />
+<meta property="og:url" content="https://uka4me.github.io/GraphQl.EfCore.Translate/" />
+<meta property="og:site_name" content="GraphQl.EfCore.Translate" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="GraphQl.EfCore.Translate" />
+<script type="text/javascript" src="https://gc.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=vqxG131iSngKU7r4L_DX2HiaEZ3VurgXmy1ZfBFgW9EeTBpR9oktbqqRac-08uZzDTPf8Sf1iCWAW6luZKNHFeURLYD9wgDPaEXKx7LCD1w" charset="UTF-8"></script><script type="application/ld+json">
+{"description":"The package adds extensions to EntityFrameworkCore that allow you to transform a GraphQL query into an EntityFrameworkCore query.","url":"https://uka4me.github.io/GraphQl.EfCore.Translate/","@type":"WebSite","headline":"GraphQl.EfCore.Translate","name":"GraphQl.EfCore.Translate","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/GraphQl.EfCore.Translate/assets/css/style.css?v=c0ffbe61bed6b0ffe3b090f5ec29550439d2f7b8">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/GraphQl.EfCore.Translate/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+
+      <h1 id="graphqlefcoretranslate">GraphQl.EfCore.Translate</h1>
+
+<p><a href="https://badge.fury.io/nu/GraphQl.EfCore.Translate"><img src="https://badge.fury.io/nu/GraphQl.EfCore.Translate.svg" alt="NuGet version" /></a></p>
+
+<p>The package adds extensions to EntityFrameworkCore that allow you to transform a GraphQL query into an EntityFrameworkCore query. The project solves the problem of a large amount of data dumping, filtering related data and adding calculated fields.</p>
+
+<h2 id="documentation">Documentation</h2>
+<p><a href="https://github.com/Uka4me/GraphQl.EfCore.Translate/wiki">Wiki</a></p>
+
+<h2 id="start">Start</h2>
+
+<h3 id="install">Install</h3>
+
+<p>Install the package</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Install-Package</span><span class="w"> </span><span class="nx">GraphQl.EfCore.Translate</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Connect services in Startup.cs file</p>
+
+<pre><code class="language-C#">public void ConfigureServices(IServiceCollection services)
+{
+    ...
+    services.AddGraphQLTranslate();
+    ...
+}
+</code></pre>
+
+<h3 id="usage">Usage</h3>
+
+<pre><code class="language-C#">using GraphQl.EfCore.Translate;
+
+...
+
+Field&lt;ListGraphType&lt;StudentObject&gt;, List&lt;Student&gt;&gt;("students")
+  .Argument&lt;IntGraphType&gt;("take")
+  .Argument&lt;IntGraphType&gt;("skip")
+  .Argument&lt;StringGraphType&gt;("orderBy")
+  .Argument&lt;ListGraphType&lt;WhereExpressionGraph&gt;&gt;("where")
+  .Resolve().WithScope().WithService&lt;SchoolContext&gt;()
+  .ResolveAsync((context, dbContext) =&gt;
+  {
+    var query = dbContext.Students
+                              .GraphQlWhere(context)
+                              .GraphQlOrder(context)
+                              .GraphQlPagination(context)
+                              .GraphQlSelect(context);
+
+    return query.ToListAsync();
+  });
+</code></pre>
+
+<p>Now you can run a simple GraphQL query. We will get the first 30 students and in the linked data we will only take courses with an “A” or “B” grade.</p>
+
+<div class="language-graphql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">query</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="n">students</span><span class="p">(</span><span class="w">
+    </span><span class="n">skip</span><span class="p">:</span><span class="w"> </span><span class="err">0</span><span class="p">,</span><span class="w">
+    </span><span class="n">take</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w">
+    </span><span class="n">orderBy</span><span class="p">:</span><span class="w"> </span><span class="s2">"enrollmentDate desc"</span><span class="p">,</span><span class="w">
+    </span><span class="n">where</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="n">path</span><span class="p">:</span><span class="w"> </span><span class="s2">"enrollmentDate"</span><span class="p">,</span><span class="w"> </span><span class="n">comparison</span><span class="p">:</span><span class="w"> </span><span class="s2">"lessThanOrEqual"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">:</span><span class="w"> </span><span class="s2">"2005-01-01"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+  </span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">iD</span><span class="w">
+    </span><span class="n">lastName</span><span class="w">
+    </span><span class="n">enrollmentDate</span><span class="w">
+    </span><span class="n">enrollments</span><span class="p">(</span><span class="w">
+      </span><span class="n">orderBy</span><span class="p">:</span><span class="w"> </span><span class="s2">"grade"</span><span class="p">,</span><span class="w">
+      </span><span class="n">where</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="n">path</span><span class="p">:</span><span class="w"> </span><span class="s2">"grade"</span><span class="p">,</span><span class="w"> </span><span class="n">comparison</span><span class="p">:</span><span class="w"> </span><span class="s2">"in"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"A"</span><span class="p">,</span><span class="w"> </span><span class="s2">"B"</span><span class="p">]</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="n">grade</span><span class="w">
+      </span><span class="n">course</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="n">title</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>This query will be equivalent to the following expression</p>
+
+<pre><code class="language-C#">var query = dbContext.Students
+  .Where(x =&gt; x.EnrollmentDate &lt;= DateTime.Parse("01.01.2005"))
+  .OrderByDescending(x =&gt; x.EnrollmentDate)
+  .Skip(0)
+  .Take(30)
+  .Select(x =&gt; new User {
+    ID = x.ID,
+    LastName = x.LastName,
+    EnrollmentDate = x.EnrollmentDate,
+    Enrollments = x.Enrollments
+                .Where(c =&gt; (new string[] {"A", "B"}).Contains(c.Grade))
+                .OrderBy(x =&gt; x.Grade)
+                .Select(c =&gt; new Enrollment {
+                  Grade = c.Grade,
+                  Course = new Course {
+		     Title = c.Course.Title
+		  }
+                })
+  });
+</code></pre>
+
+
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>
