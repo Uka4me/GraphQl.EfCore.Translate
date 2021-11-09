@@ -1,3 +1,5 @@
+<meta name="google-site-verification" content="-oZN45GbV2cuuS6IQ7rLcs6w35M5wmt1uUOiCpsskR8" />
+
 [![NuGet version](https://badge.fury.io/nu/GraphQl.EfCore.Translate.svg)](https://badge.fury.io/nu/GraphQl.EfCore.Translate)
 
 The package adds extensions to EntityFrameworkCore that allow you to transform a GraphQL query into an EntityFrameworkCore query. The project solves the problem of a large amount of data dumping, filtering related data and adding calculated fields.
