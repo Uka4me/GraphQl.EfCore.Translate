@@ -32,12 +32,8 @@ namespace GraphQl.EfCore.Translate.Example
                 options.LogTo(Console.WriteLine);
             });
 
+            services.AddGraphQLTranslate();
             services.AddSingleton<MainQuery>();
-            services.AddSingleton<StringComparisonGraph>();
-            services.AddSingleton<WhereExpressionGraph>();
-            services.AddSingleton<OrderByGraph>();
-            services.AddSingleton<ComparisonGraph>();
-            services.AddSingleton<ConnectorGraph>();
             services.AddSingleton<GraphQLSchema>();
 
             services

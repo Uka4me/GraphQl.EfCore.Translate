@@ -8,11 +8,36 @@ The package adds extensions to EntityFrameworkCore that allow you to transform a
 
 ### Install
 
+Install the package
+
 ```powershell
 Install-Package GraphQl.EfCore.Translate
 ```
 
-### A simple example
+Connect services in Startup.cs file
+
+```C#
+public void ConfigureServices(IServiceCollection services)
+{
+    ...
+
+    services.AddGraphQLTranslate();
+
+    ...
+}
+```
+
+Set the converter in your schema to "DefaultNameConverter", for example
+
+```C#
+public GraphQLSchema(IServiceProvider services) : base(services)
+{
+  Query = services.GetRequiredService<MainQuery>();
+  NameConverter = new DefaultNameConverter();
+}
+```
+
+### Usage
 
 ```C#
 using GraphQl.EfCore.Translate;
@@ -24,7 +49,7 @@ Field<ListGraphType<StudentObject>, List<Student>>("Students")
   .Argument<IntGraphType>("Skip")
   .Argument<StringGraphType>("OrderBy")
   .Argument<ListGraphType<WhereExpressionGraph>>("Where")
-  .Resolve().WithScope().WithService<DBContext>()
+  .Resolve().WithScope().WithService<SchoolContext>()
   .ResolveAsync((context, dbContext) =>
   {
     var query = dbContext.Students
@@ -89,8 +114,8 @@ var query = dbContext.Students
                 .Select(c => new Enrollment {
                   Grade = c.Grade,
                   Course = new Course {
-					Title = c.Course.Title
-				  }
+					          Title = c.Course.Title
+				          }
                 })
   });
 ```
