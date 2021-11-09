@@ -23,18 +23,9 @@ namespace GraphQl.EfCore.Translate
 		public static Expression<Func<T, T>> BuildPredicate(List<NodeGraph> fields)
         {
 			var param = PropertyCache<T>.SourceParameter;
-			// var parameter = Expression.Parameter(typeof(T), "e");
 			var body = MakePredicateBody(typeof(T), param, fields.Select(x => x.Path).Select(m => m.Split('.')), fields);
 			return Expression.Lambda<Func<T, T>>(body, param);
 		}
-
-        /*static IQueryable<T> GetNewObjectSelect<T>(this IQueryable<T> queryable, List<NodeGraph> fields, Dictionary<string, Func<Expression, Expression>> config)
-		{
-			// var fields = GetSubFieldsSelect(context.SubFields.Select(x => x.Value));
-			var parameter = Expression.Parameter(typeof(T), "e");
-			var body = NewObject<T>(typeof(T), parameter, fields.Select(x => x.Path).Select(m => m.Split('.')), fields, config);
-			return queryable.Select(Expression.Lambda<Func<T, T>>(body, parameter));
-		}*/
 
 		static Expression MakePredicateBody(Type targetType, Expression source, IEnumerable<string[]> memberPaths, List<NodeGraph> fields, int depth = 0)
 		{
@@ -68,7 +59,6 @@ namespace GraphQl.EfCore.Translate
 					{
 						targetValue = sourceMember;
 					}
-					// targetValue = config.ContainsKey(memberName) ? config[memberName].Body : sourceMember;
 				}
 				else
 				{
@@ -77,7 +67,6 @@ namespace GraphQl.EfCore.Translate
 					{
 						// var sourceElementParam = Expression.Parameter(sourceElementType, "e");
 						var sourceElementParam = (ParameterExpression)(typeof(PropertyCache<>).MakeGenericType(sourceElementType).GetField("SourceParameter").GetValue(null));
-						// var sourceElementParam = (ParameterExpression)(typeof(Property<>).MakeGenericType(sourceElementType).GetProperty("SourceParameter")).GetValue(m11);
 						targetValue = MakePredicateBody(targetElementType, sourceElementParam, childMembers, fields, depth + 1);
 
 						var f = fields.FirstOrDefault(x => x.Path == memberName);
@@ -159,8 +148,6 @@ namespace GraphQl.EfCore.Translate
 					}
 					else
 					{
-						// var sourceElementParam = (ParameterExpression)(typeof(PropertyNewCache<>).MakeGenericType(sourceMember.Type).GetField("SourceParameter").GetValue(null));
-
 						targetValue = Expression.Condition(
 							Expression.Equal(sourceMember, Expression.Constant(null, sourceMember.Type)),
 							Expression.Constant(null, sourceMember.Type),
