@@ -19,7 +19,7 @@ using GraphQl.EfCore.Translate;
 
 ...
 
-Field<ListGraphType<UserObject>, List<User>>("Users")
+Field<ListGraphType<StudentObject>, List<Student>>("Students")
   .Argument<IntGraphType>("Take")
   .Argument<IntGraphType>("Skip")
   .Argument<StringGraphType>("OrderBy")
@@ -27,7 +27,7 @@ Field<ListGraphType<UserObject>, List<User>>("Users")
   .Resolve().WithScope().WithService<DBContext>()
   .ResolveAsync((context, dbContext) =>
   {
-    var query = dbContext.Users
+    var query = dbContext.Students
                               .GraphQlWhere(context)
                               .GraphQlOrder(context)
                               .GraphQlPagination(context)
@@ -37,33 +37,35 @@ Field<ListGraphType<UserObject>, List<User>>("Users")
   });
 ```
 
-Now you can run a simple GraphQL query. We will get the first 30 user records and in the related data we will take only those cities in which the population is more than 1000 people.
+Now you can run a simple GraphQL query. We will get the first 30 students and in the linked data we will only take courses with an "A" or "B" grade.
 
 ```graphql
 query {
-  Users(
+  Students(
     Skip: 0,
     Take: 30,
-    OrderBy: "CreatedAt desc",
+    OrderBy: "EnrollmentDate desc",
     Where: [
       {
-        Path: "Name", Comparison: "like", Value: "%John%" 
+        Path: "EnrollmentDate", Comparison: "lessThanOrEqual", Value: "2005-01-01"
       }
     ]
   ) {
-    Id
-    Name
-    Email
-    Cities(
-      OrderBy: "Population desc",
+    ID
+    LastName
+    EnrollmentDate
+    Enrollments(
+      OrderBy: "Grade",
       Where: [
         {
-          Path: "Population", Comparison: "greaterThan", Value: "1000" 
+          Path: "Grade", Comparison: "in", Value: ["A", "B"]
         }
       ]
     ) {
-      Title
-      Population
+      Grade
+      Course {
+        Title
+      }
     }
   }
 }
@@ -72,21 +74,23 @@ query {
 This query will be equivalent to the following expression
 
 ```C#
-var query = dbContext.Users
-  .Where(x => EF.Functions.Like(x.Name, "%John%"))
-  .OrderByDescending(x => x.CreatedAt)
+var query = dbContext.Students
+  .Where(x => x.EnrollmentDate <= DateTime.Parse("01.01.2005"))
+  .OrderByDescending(x => x.EnrollmentDate)
   .Skip(0)
   .Take(30)
   .Select(x => new User {
-    Id = x.Id,
-    Name = x.Name,
-    Email = x.Email,
-    Cities = x.Cities
-                .Where(c => c.Population > 1000)
-                .OrderByDescending(x => x.Population)
-                .Select(c => new City {
-                  Title = c.Title,
-                  Population = c.Population
+    ID = x.ID,
+    LastName = x.LastName,
+    EnrollmentDate = x.EnrollmentDate,
+    Enrollments = x.Enrollments
+                .Where(c => (new string[] {"A", "B"}).Contains(c.Grade))
+                .OrderBy(x => x.Grade)
+                .Select(c => new Enrollment {
+                  Grade = c.Grade,
+                  Course = new Course {
+					Title = c.Course.Title
+				  }
                 })
   });
 ```
