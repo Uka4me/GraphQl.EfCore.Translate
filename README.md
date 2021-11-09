@@ -23,20 +23,8 @@ Connect services in Startup.cs file
 public void ConfigureServices(IServiceCollection services)
 {
     ...
-
     services.AddGraphQLTranslate();
-
     ...
-}
-```
-
-Set the converter in your schema to "DefaultNameConverter", for example
-
-```C#
-public GraphQLSchema(IServiceProvider services) : base(services)
-{
-  Query = services.GetRequiredService<MainQuery>();
-  NameConverter = new DefaultNameConverter();
 }
 ```
 
@@ -47,11 +35,11 @@ using GraphQl.EfCore.Translate;
 
 ...
 
-Field<ListGraphType<StudentObject>, List<Student>>("Students")
-  .Argument<IntGraphType>("Take")
-  .Argument<IntGraphType>("Skip")
-  .Argument<StringGraphType>("OrderBy")
-  .Argument<ListGraphType<WhereExpressionGraph>>("Where")
+Field<ListGraphType<StudentObject>, List<Student>>("students")
+  .Argument<IntGraphType>("take")
+  .Argument<IntGraphType>("skip")
+  .Argument<StringGraphType>("orderBy")
+  .Argument<ListGraphType<WhereExpressionGraph>>("where")
   .Resolve().WithScope().WithService<SchoolContext>()
   .ResolveAsync((context, dbContext) =>
   {
@@ -69,30 +57,30 @@ Now you can run a simple GraphQL query. We will get the first 30 students and in
 
 ```graphql
 query {
-  Students(
-    Skip: 0,
-    Take: 30,
-    OrderBy: "EnrollmentDate desc",
-    Where: [
+  students(
+    skip: 0,
+    take: 30,
+    orderBy: "enrollmentDate desc",
+    where: [
       {
-        Path: "EnrollmentDate", Comparison: "lessThanOrEqual", Value: "2005-01-01"
+        path: "enrollmentDate", comparison: "lessThanOrEqual", value: "2005-01-01"
       }
     ]
   ) {
-    ID
-    LastName
-    EnrollmentDate
-    Enrollments(
-      OrderBy: "Grade",
-      Where: [
+    iD
+    lastName
+    enrollmentDate
+    enrollments(
+      orderBy: "grade",
+      where: [
         {
-          Path: "Grade", Comparison: "in", Value: ["A", "B"]
+          path: "grade", comparison: "in", value: ["A", "B"]
         }
       ]
     ) {
-      Grade
-      Course {
-        Title
+      grade
+      course {
+        title
       }
     }
   }
@@ -117,8 +105,8 @@ var query = dbContext.Students
                 .Select(c => new Enrollment {
                   Grade = c.Grade,
                   Course = new Course {
-					          Title = c.Course.Title
-				          }
+		     Title = c.Course.Title
+		  }
                 })
   });
 ```
