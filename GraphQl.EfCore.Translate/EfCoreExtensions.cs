@@ -75,12 +75,11 @@ namespace GraphQl.EfCore.Translate
 		static IQueryable<T> OrderBy<T>(this IQueryable<T> source, string orderByProperty, bool desc, bool isThenBy = false)
 		{
 			string command = isThenBy ? (desc ? "ThenByDescending" : "ThenBy") : (desc ? "OrderByDescending" : "OrderBy");
-			var type = typeof(T);
-			var property = type.GetProperty(orderByProperty, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.FlattenHierarchy);
-			var parameter = Expression.Parameter(type, "p");
-			var propertyAccess = Expression.MakeMemberAccess(parameter, property);
+			var parameter = PropertyCache<T>.SourceParameter;
+			var property = PropertyCache<T>.GetProperty(orderByProperty);
+			var propertyAccess = Expression.MakeMemberAccess(parameter, property.Info);
 			var orderByExpression = Expression.Lambda(propertyAccess, parameter);
-			var resultExpression = Expression.Call(typeof(Queryable), command, new Type[] { type, property.PropertyType },
+			var resultExpression = Expression.Call(typeof(Queryable), command, new Type[] { typeof(T), property.PropertyType },
 										  source.Expression, Expression.Quote(orderByExpression));
 			return source.Provider.CreateQuery<T>(resultExpression);
 		}
