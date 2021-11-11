@@ -130,7 +130,7 @@ namespace GraphQl.EfCore.Translate
 							{
 								if (f.Arguments.ContainsKey("skip"))
 								{
-									where = Skip(where, new Type[] { sourceElementType }, (int)f.Arguments["skip"]);
+									where = Skip(where, sourceElementType, (int)f.Arguments["skip"]);
 								}
 
 							}
@@ -143,7 +143,7 @@ namespace GraphQl.EfCore.Translate
 							{
 								if (f.Arguments.ContainsKey("take"))
 								{
-									where = Take(where, new Type[] { sourceElementType }, (int)f.Arguments["take"]);
+									where = Take(where, sourceElementType, (int)f.Arguments["take"]);
 								}
 							}
 							catch
@@ -231,9 +231,8 @@ namespace GraphQl.EfCore.Translate
 		{
 			var command = isThenBy ? (desc ? nameof(Enumerable.ThenByDescending) : nameof(Enumerable.ThenBy)) : (desc ? nameof(Enumerable.OrderByDescending) : nameof(Enumerable.OrderBy));
 
-			var parameter = Expression.Parameter(type, "p");
-			var propertyOrField = GetPropertyOrField(parameter.Type, orderByProperty);
-			var sourceMember = Expression.PropertyOrField(parameter, propertyOrField.Name);
+			ParameterExpression parameter = (ParameterExpression)(typeof(PropertyCache<>).MakeGenericType(type).GetField("SourceParameter").GetValue(null));
+			MemberExpression sourceMember = GetMemberFromProperty(type, orderByProperty);
 
 			return Expression.Call(
 				typeof(Enumerable),
@@ -258,30 +257,30 @@ namespace GraphQl.EfCore.Translate
 			return result;
 		}
 
-		static Expression Take(Expression source, Type[] types, int count)
+		static Expression Take(Expression source, Type type, int count)
 		{
 			return Expression.Call(
 				typeof(Enumerable),
 				nameof(Enumerable.Take),
-				types,
+				new Type[] { type },
 				source,
 				Expression.Constant(count, typeof(int))
 			);
 		}
 
-		static Expression Skip(Expression source, Type[] types, int count)
+		static Expression Skip(Expression source, Type type, int count)
 		{
 			return Expression.Call(
 				typeof(Enumerable),
 				nameof(Enumerable.Skip),
-				types,
+				new Type[] { type },
 				source,
 				Expression.Constant(count, typeof(int))
 			);
 		}
 
-		static MemberInfo GetPropertyOrField(Type type, string name) {
+		/*static MemberInfo GetPropertyOrField(Type type, string name) {
 			return type.GetProperty(name, bindingFlagsPublic) ?? (MemberInfo?)type.GetField(name, bindingFlagsPublic);
-		}
+		}*/
 	}
 }
