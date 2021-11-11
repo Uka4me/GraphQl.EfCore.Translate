@@ -9,12 +9,15 @@
     <PackageReference Include="GraphQL" Version="4.6.1" />
     <PackageReference Include="GraphQL.Server.Transports.AspNetCore" Version="5.0.2" />
     <PackageReference Include="GraphQL.Server.Transports.AspNetCore.SystemTextJson" Version="5.0.2" />
+    <PackageReference Include="HotChocolate" Version="12.1.0" />
+    <PackageReference Include="HotChocolate.AspNetCore" Version="12.1.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Entity\Entity.csproj" />
     <ProjectReference Include="..\GraphQL.DotNet\GraphQL.DotNet.csproj" />
+    <ProjectReference Include="..\GraphQL.HotChocolate\GraphQL.HotChocolate.csproj" />
   </ItemGroup>
 
 </Project>

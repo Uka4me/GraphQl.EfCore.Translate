@@ -2,6 +2,7 @@ using Entity;
 using GraphQL;
 using GraphQL.DotNet;
 using GraphQL.DotNet.Queries;
+using GraphQL.HotChocolate.Queries;
 using GraphQL.Server;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -27,9 +28,9 @@ namespace GraphQl.EfCore.Translate.Example
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<SchoolContext>(options => {
+            // services.AddDbContext<SchoolContext>(options => options.UseInMemoryDatabase("Test"));
+            services.AddPooledDbContextFactory<SchoolContext>(options => {
                 options.UseInMemoryDatabase("Test");
-                // options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")).EnableSensitiveDataLogging().EnableDetailedErrors();
                 options.LogTo(Console.WriteLine);
             });
 
@@ -42,6 +43,10 @@ namespace GraphQl.EfCore.Translate.Example
                 .AddGraphTypes(ServiceLifetime.Scoped)
                 .AddSystemTextJson()
                 .AddGraphTypes(typeof(GraphQLSchema));
+
+            services
+                .AddGraphQLServer()
+                .AddQueryType<StudentQuery>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -57,6 +62,7 @@ namespace GraphQl.EfCore.Translate.Example
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGraphQL<GraphQLSchema>();
+                endpoints.MapGraphQL("/hotchocolate");
             });
         }
     }

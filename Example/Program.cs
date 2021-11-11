@@ -1,5 +1,6 @@
 using Entity;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -29,7 +30,7 @@ namespace GraphQl.EfCore.Translate.Example
                 var services = scope.ServiceProvider;
                 try
                 {
-                    var context = services.GetRequiredService<SchoolContext>();
+                    var context = services.GetRequiredService<IDbContextFactory<SchoolContext>>();
                     DbInitializer.Initialize(context);
                 }
                 catch (Exception ex)

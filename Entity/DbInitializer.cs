@@ -1,4 +1,5 @@
 ﻿using Entity.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +10,10 @@ namespace Entity
 {
     public static class DbInitializer
     {
-        public static void Initialize(SchoolContext context)
+        public static void Initialize(IDbContextFactory<SchoolContext> dbContextFactory/*SchoolContext context*/)
         {
+            SchoolContext context = dbContextFactory.CreateDbContext();
+
             context.Database.EnsureCreated();
 
             // Look for any students.
