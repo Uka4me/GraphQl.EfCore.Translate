@@ -7,9 +7,6 @@ EXPOSE 80
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
 COPY ["Example/Example.csproj", "Example/"]
-COPY ["GraphQL.DotNet/GraphQL.DotNet.csproj", "GraphQL.DotNet/"]
-COPY ["GraphQl.EfCore.Translate/GraphQl.EfCore.Translate.csproj", "GraphQl.EfCore.Translate/"]
-COPY ["Entity/Entity.csproj", "Entity/"]
 RUN dotnet restore "Example/Example.csproj"
 COPY . .
 WORKDIR "/src/Example"
