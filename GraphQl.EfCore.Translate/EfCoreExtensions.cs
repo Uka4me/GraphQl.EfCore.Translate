@@ -13,16 +13,20 @@ namespace GraphQl.EfCore.Translate
 {
 	public static class EfCoreExtensions
 	{
-		public static IQueryable<T> GraphQlSelect<T>(this IQueryable<T> queryable, IResolveFieldContext<object> context)
+		public static IQueryable<T> GraphQl<T>(this IQueryable<T> queryable, IResolveFieldContext<object> context, IEnumerable<object> fields = null, string defaultOrder = "")
 		{
-			var items = ConvertFieldToNodeGraph(context.SubFields.Select(x => x.Value), context);
-			var lambdaSelect = ExpressionBuilderSelect<T>.BuildPredicate(items);
-			return queryable.Select(lambdaSelect);
+			queryable = queryable
+				.GraphQlWhere(context)
+				.GraphQlOrder(context, defaultOrder)
+				.GraphQlPagination(context)
+				.GraphQlSelect(context, fields);
+
+			return queryable;
 		}
 
-		public static IQueryable<T> GraphQlSelect<T>(this IQueryable<T> queryable, IResolveFieldContext<object> context, IEnumerable<object> fields)
+		public static IQueryable<T> GraphQlSelect<T>(this IQueryable<T> queryable, IResolveFieldContext<object> context, IEnumerable<object> fields = null)
 		{
-			var items = ConvertFieldToNodeGraph(fields, context);
+			var items = ConvertFieldToNodeGraph(fields is null ? context.SubFields.Select(x => x.Value) : fields, context);
 			var lambdaSelect = ExpressionBuilderSelect<T>.BuildPredicate(items);
 			return queryable.Select(lambdaSelect);
 		}
