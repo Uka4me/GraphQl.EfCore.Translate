@@ -28,7 +28,8 @@ namespace GraphQl.EfCore.Translate.Example
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<SchoolContext>(options => {
-                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")).EnableSensitiveDataLogging().EnableDetailedErrors();
+                options.UseInMemoryDatabase("Test");
+                // options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")).EnableSensitiveDataLogging().EnableDetailedErrors();
                 options.LogTo(Console.WriteLine);
             });
 
