@@ -18,6 +18,10 @@ static class PropertyCache<TInput>
             {
                 var left = AggregatePath(x, SourceParameter);
 
+                if (left is null) {
+                    return null;
+                }
+
                 var converted = Expression.Convert(left, typeof(object));
                 var lambda = Expression.Lambda<Func<TInput, object>>(converted, SourceParameter);
                 var compile = lambda.Compile();
@@ -41,8 +45,17 @@ static class PropertyCache<TInput>
         try
         {
             return path.Split('.')
-                .Aggregate(parameter, (current, property) =>
-                    Expression.MakeMemberAccess(current, GetPropertyOrField(current.Type, property)!));
+                .Aggregate(parameter, (current, property) => {
+                    if (current is not null) {
+                        var memberInfo = GetPropertyOrField(current.Type, property);
+                        if (memberInfo is not null)
+                        {
+                            return Expression.MakeMemberAccess(current, memberInfo);
+                        }
+                    }
+                    
+                    return null;
+                });
         }
         catch (ArgumentException exception)
         {
@@ -93,7 +106,8 @@ static class PropertyCache<TInput>
         if (propertyOrField is null)
         {
             // Property does not exist on current type
-            throw new ArgumentException($"'{propertyOrFieldName}' is not a member of type {type.FullName}");
+            // throw new ArgumentException($"'{propertyOrFieldName}' is not a member of type {type.FullName}");
+            return null;
         }
 
         return propertyOrField;

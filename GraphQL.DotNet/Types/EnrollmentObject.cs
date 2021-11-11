@@ -17,7 +17,7 @@ namespace GraphQL.DotNet.Types
             Field(m => m.EnrollmentID);
             Field(m => m.CourseID);
             Field(m => m.StudentID);
-            // Field(m => m.Grade, type: typeof(EnumerationGraphType<Grade>));
+            Field<StringGraphType>("Test", resolve: m => "Привет");
             Field<GradeEnum>("Grade", resolve: w => w.Source.Grade);
             Field(
                     name: "Course",

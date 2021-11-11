@@ -18,6 +18,7 @@ namespace GraphQL.DotNet.Types
             Field(m => m.CourseID);
             Field(m => m.Title);
             Field(m => m.Credits);
+            Field<StringGraphType>("Test", resolve: m => "Привет");
             Field(
                 name: "Enrollments",
                 type: typeof(ListGraphType<EnrollmentObject>),

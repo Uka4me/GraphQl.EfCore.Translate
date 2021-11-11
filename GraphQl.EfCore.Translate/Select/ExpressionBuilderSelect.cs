@@ -51,6 +51,10 @@ namespace GraphQl.EfCore.Translate
 					pathSource is null ? memberName : $"{pathSource}.{memberName}"
 				);
 
+				if (sourceMember is null) {
+					continue;
+				}
+
 				/*var propertyOrFieldTarget = GetPropertyOrField(target.Type, memberName);
                 var propertyOrFieldSource = GetPropertyOrField(source.Type, memberName);
                 var targetMember = Expression.PropertyOrField(target, propertyOrFieldTarget.Name);
@@ -176,7 +180,8 @@ namespace GraphQl.EfCore.Translate
 		static MemberExpression GetMemberFromProperty(Type type, string path)
 		{
 			var method = typeof(PropertyCache<>).MakeGenericType(type).GetMethod("GetProperty", new Type[] { typeof(string) });
-			return (MemberExpression)(typeof(Property<>).MakeGenericType(type).GetProperty("Left")).GetValue(method.Invoke(null, new[] { path }));
+			var property = method.Invoke(null, new[] { path });
+			return property is not null ? (MemberExpression)(typeof(Property<>).MakeGenericType(type).GetProperty("Left")).GetValue(property) : null;
 		}
 
 		static string GetPathProperty(MemberExpression source)
