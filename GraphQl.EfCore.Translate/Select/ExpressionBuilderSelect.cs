@@ -31,22 +31,30 @@ namespace GraphQl.EfCore.Translate
 
 		static Expression MakePredicateBody(Type targetType, Expression source, IEnumerable<string[]> memberPaths, List<NodeGraph> fields, int depth = 0)
 		{
+			String pathSource = null;
+			Type typeSource = null;
+			if (source is MemberExpression)
+			{
+				pathSource = GetPathProperty((MemberExpression)source);
+				typeSource = GetTypeProperty((MemberExpression)source);
+			}
+
 			var bindings = new List<MemberBinding>();
 			var target = Expression.Constant(null, targetType);
 			foreach (var memberGroup in memberPaths.GroupBy(path => path[depth]))
 			{
-				var memberName = memberGroup.Key;
+				String memberName = memberGroup.Key;
 
-				/*var m1 = typeof(PropertyCache<>).MakeGenericType(target.Type).GetMethod("GetProperty", new Type[] { typeof(string) });
-                var targetMember = (MemberExpression)(typeof(Property<>).MakeGenericType(target.Type).GetProperty("Left")).GetValue(m1.Invoke(null, new[] { memberName }));
-                var m2 = typeof(PropertyCache<>).MakeGenericType(source.Type).GetMethod("GetProperty", new Type[] { typeof(string) });
-                var sourceMember = (MemberExpression)(typeof(Property<>).MakeGenericType(source.Type).GetProperty("Left")).GetValue(m2.Invoke(null, new[] { memberName }));
-				*/
+				MemberExpression targetMember = GetMemberFromProperty(target.Type, memberName);
+				MemberExpression sourceMember = GetMemberFromProperty(
+					typeSource is null ? source.Type : typeSource,
+					pathSource is null ? memberName : $"{pathSource}.{memberName}"
+				);
 
-				var propertyOrFieldTarget = GetPropertyOrField(target.Type, memberName);
-				var propertyOrFieldSource = GetPropertyOrField(source.Type, memberName);
-				var targetMember = Expression.PropertyOrField(target, propertyOrFieldTarget.Name);
-				var sourceMember = Expression.PropertyOrField(source, propertyOrFieldSource.Name);
+				/*var propertyOrFieldTarget = GetPropertyOrField(target.Type, memberName);
+                var propertyOrFieldSource = GetPropertyOrField(source.Type, memberName);
+                var targetMember = Expression.PropertyOrField(target, propertyOrFieldTarget.Name);
+                var sourceMember = Expression.PropertyOrField(source, propertyOrFieldSource.Name);*/
 				var childMembers = memberGroup.Where(path => depth + 1 < path.Length).ToList();
 
 				var calculatedFields = (ConcurrentDictionary<string, Func<Expression, Expression>>)(typeof(ExpressionBuilderSelect<>).MakeGenericType(source.Type).GetField("CalculatedFields").GetValue(null));
@@ -163,6 +171,22 @@ namespace GraphQl.EfCore.Translate
 				bindings.Add(Expression.Bind(targetMember.Member, targetValue));
 			}
 			return Expression.MemberInit(Expression.New(targetType), bindings);
+		}
+
+		static MemberExpression GetMemberFromProperty(Type type, string path)
+		{
+			var method = typeof(PropertyCache<>).MakeGenericType(type).GetMethod("GetProperty", new Type[] { typeof(string) });
+			return (MemberExpression)(typeof(Property<>).MakeGenericType(type).GetProperty("Left")).GetValue(method.Invoke(null, new[] { path }));
+		}
+
+		static string GetPathProperty(MemberExpression source)
+		{
+			return source.Expression is MemberExpression ? $"{GetPathProperty((MemberExpression)source.Expression)}.{source.Member.Name}" : source.Member.Name;
+		}
+
+		static Type GetTypeProperty(MemberExpression source)
+		{
+			return source.Expression is MemberExpression ? GetTypeProperty((MemberExpression)source.Expression) : source.Expression.Type;
 		}
 
 		static bool IsEnumerableType(Type type, out Type elementType)
