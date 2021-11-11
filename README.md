@@ -110,3 +110,11 @@ var query = dbContext.Students
                 })
   });
 ```
+## Dependencies versions
+
+### Current
+
+### <= 1.0.7
+- net5.0
+- GraphQL (>= 4.6.1)
+- Microsoft.EntityFrameworkCore (>= 5.0.12)
