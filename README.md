@@ -112,7 +112,10 @@ var query = dbContext.Students
 ```
 ## Dependencies versions
 
-### Current
+### 2.0.0
+- net6.0
+- GraphQL (>= 4.6.1)
+- Microsoft.EntityFrameworkCore (>= 6.0.0)
 
 ### <= 1.0.7
 - net5.0
