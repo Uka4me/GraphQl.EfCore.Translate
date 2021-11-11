@@ -5,18 +5,8 @@
     <RepositoryUrl>https://github.com/Uka4me/GraphQl.EfCore.Translate</RepositoryUrl>
     <PackageTags>GraphQL; EntityFrameworkCore; .NetCore; graphql-dotnet</PackageTags>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Version>1.0.5</Version>
+    <Version>1.0.7</Version>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Where\ArgumentProcessor_List.cs" />
-    <Compile Remove="Where\ArgumentProcessor_Queryable.cs" />
-    <Compile Remove="Where\ArgumentReader.cs" />
-    <Compile Remove="Where\ArgumentsAppender.cs" />
-    <Compile Remove="Where\Graphs\ArgumentGraphs.cs" />
-    <Compile Remove="Where\Graphs\OrderBy.cs" />
-    <Compile Remove="Where\Graphs\OrderByGraph.cs" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="GraphQL" Version="4.6.1" />
