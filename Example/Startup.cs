@@ -1,4 +1,5 @@
 using Entity;
+using GraphQl.EfCore.Translate.DotNet;
 using GraphQL;
 using GraphQL.DotNet;
 using GraphQL.DotNet.Queries;
@@ -46,6 +47,10 @@ namespace GraphQl.EfCore.Translate.Example
 
             services
                 .AddGraphQLServer()
+                .AddType<GraphQL.HotChocolate.Types.CourseObject>()
+                .AddType<GraphQL.HotChocolate.Types.EnrollmentObject>()
+                .AddType<GraphQL.HotChocolate.Types.StudentObject>()
+                .AddType<GraphQl.EfCore.Translate.HotChocolate.Graphs.WhereExpressionGraph>()
                 .AddQueryType<StudentQuery>();
         }
 

@@ -1,10 +1,11 @@
-﻿using GraphQL;
+﻿//using GraphQL;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
+namespace GraphQl.EfCore.Translate;
 static class TypeConverter
 {
     public static IList ConvertStringsToList(string?[] values, MemberInfo property)
@@ -17,7 +18,7 @@ static class TypeConverter
         var hasNull = values.Contains(null);
 
         var type = GetUnderlyingType(property);
-        if (!type.IsNullable() && hasNull)
+        if (!(type == typeof(string) || type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>)) && hasNull)
         {
             throw new($"Null passed to In expression for non nullable type '{type.FullName}'.");
         }

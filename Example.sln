@@ -13,6 +13,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GraphQl.EfCore.Translate", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphQL.HotChocolate", "GraphQL.HotChocolate\GraphQL.HotChocolate.csproj", "{93448121-8FB9-4F84-A462-CDE8B2579B9A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphQl.EfCore.Translate.HotChocolate", "GraphQl.EfCore.Translate.HotChocolate\GraphQl.EfCore.Translate.HotChocolate.csproj", "{5D138060-181D-4849-90B5-3544206A1CC7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphQl.EfCore.Translate.DotNet", "GraphQl.EfCore.Translate.DotNet\GraphQl.EfCore.Translate.DotNet.csproj", "{83FF120B-A804-49EE-B73B-7D8B0AC93B79}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{93448121-8FB9-4F84-A462-CDE8B2579B9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{93448121-8FB9-4F84-A462-CDE8B2579B9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{93448121-8FB9-4F84-A462-CDE8B2579B9A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D138060-181D-4849-90B5-3544206A1CC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D138060-181D-4849-90B5-3544206A1CC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D138060-181D-4849-90B5-3544206A1CC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D138060-181D-4849-90B5-3544206A1CC7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83FF120B-A804-49EE-B73B-7D8B0AC93B79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83FF120B-A804-49EE-B73B-7D8B0AC93B79}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83FF120B-A804-49EE-B73B-7D8B0AC93B79}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83FF120B-A804-49EE-B73B-7D8B0AC93B79}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

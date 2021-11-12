@@ -5,7 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-static class PropertyCache<TInput>
+public static class PropertyCache<TInput>
 {
     public static ParameterExpression SourceParameter = Expression.Parameter(typeof(TInput));
     static ConcurrentDictionary<string, Property<TInput>> properties = new();

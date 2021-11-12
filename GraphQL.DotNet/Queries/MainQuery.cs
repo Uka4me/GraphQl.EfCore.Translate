@@ -1,4 +1,4 @@
-﻿using GraphQl.EfCore.Translate;
+﻿using GraphQl.EfCore.Translate.DotNet;
 using GraphQL.Types;
 using System;
 using System.Collections.Generic;

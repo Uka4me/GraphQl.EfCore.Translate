@@ -1,8 +1,7 @@
 ﻿using GraphQL.Types;
 
-namespace GraphQl.EfCore.Translate
+namespace GraphQl.EfCore.Translate.DotNet
 {
-
     public class WhereExpressionGraph :
         InputObjectGraphType<WhereExpression>
     {

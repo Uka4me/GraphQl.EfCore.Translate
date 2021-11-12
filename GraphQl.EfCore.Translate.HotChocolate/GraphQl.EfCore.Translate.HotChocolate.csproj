@@ -7,13 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HotChocolate.AspNetCore" Version="12.2.0" />
-    <PackageReference Include="HotChocolate.Data.EntityFramework" Version="12.2.0" />
+    <PackageReference Include="HotChocolate" Version="12.2.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Entity\Entity.csproj" />
-    <ProjectReference Include="..\GraphQl.EfCore.Translate.HotChocolate\GraphQl.EfCore.Translate.HotChocolate.csproj" />
     <ProjectReference Include="..\GraphQl.EfCore.Translate\GraphQl.EfCore.Translate.csproj" />
   </ItemGroup>
 

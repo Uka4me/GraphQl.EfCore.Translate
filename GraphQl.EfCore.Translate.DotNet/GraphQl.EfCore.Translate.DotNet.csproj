@@ -1,7 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -9,8 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Entity\Entity.csproj" />
-    <ProjectReference Include="..\GraphQl.EfCore.Translate.DotNet\GraphQl.EfCore.Translate.DotNet.csproj" />
+    <ProjectReference Include="..\GraphQl.EfCore.Translate\GraphQl.EfCore.Translate.csproj" />
   </ItemGroup>
 
 </Project>

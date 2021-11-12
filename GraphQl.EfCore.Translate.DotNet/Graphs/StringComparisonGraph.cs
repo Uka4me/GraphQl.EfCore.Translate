@@ -2,16 +2,16 @@
 using GraphQL.Types;
 using System;
 
-namespace GraphQl.EfCore.Translate
+namespace GraphQl.EfCore.Translate.DotNet
 {
-    public class StringComparisonGraph : EnumerationGraphType //<StringComparison>
+    public class StringComparisonGraph : EnumerationGraphType<StringComparison> //<StringComparison>
     {
-        public StringComparisonGraph()
+        /*public StringComparisonGraph()
         {
             Name = nameof(StringComparison);
             AddValue("Ordinal", null, StringComparison.Ordinal);
             AddValue("OrdinalIgnoreCase", null, StringComparison.OrdinalIgnoreCase);
-        }
+        }*/
 
         public override bool CanParseLiteral(IValue value)
         {

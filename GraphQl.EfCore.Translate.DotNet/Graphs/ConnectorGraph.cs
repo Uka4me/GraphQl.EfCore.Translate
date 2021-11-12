@@ -3,17 +3,16 @@ using GraphQL.Types;
 using GraphQl.EfCore.Translate;
 using System;
 
-namespace GraphQl.EfCore.Translate
+namespace GraphQl.EfCore.Translate.DotNet
 {
-    public class ConnectorGraph :
-        EnumerationGraphType
+    public class ConnectorGraph : EnumerationGraphType<Connector>
     {
-        public ConnectorGraph()
+        /*public ConnectorGraph()
         {
             Name = nameof(Connector);
             AddValue("and", null, Connector.And);
             AddValue("or", null, Connector.Or);
-        }
+        }*/
 
         public override bool CanParseLiteral(IValue value)
         {

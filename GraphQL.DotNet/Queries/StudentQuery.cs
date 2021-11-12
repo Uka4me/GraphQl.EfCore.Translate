@@ -1,11 +1,11 @@
 ﻿using System.Linq;
-using GraphQl.EfCore.Translate;
 using GraphQL.DotNet.Types;
 using Microsoft.Extensions.DependencyInjection;
 using Entity;
 using GraphQL.Types;
 using System.Collections.Generic;
 using Entity.Models;
+using GraphQl.EfCore.Translate.DotNet;
 
 namespace GraphQL.DotNet.Queries
 {
@@ -25,9 +25,6 @@ namespace GraphQL.DotNet.Queries
 							  .GraphQlOrder(context)
 							  .GraphQlPagination(context)
 							  .GraphQlSelect(context);
-
-				  /*List<Grade?> t = new List<Grade?>() { Grade.A, Grade.B };
-				  var query1 = dbContext.Enrollments.Where(x => t.Contains(x.Grade));*/
 
 				  return query.ToList();
 			  }

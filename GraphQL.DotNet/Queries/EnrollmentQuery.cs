@@ -1,9 +1,9 @@
 ﻿using System.Linq;
-using GraphQl.EfCore.Translate;
 using GraphQL.DotNet.Types;
 using Microsoft.Extensions.DependencyInjection;
 using Entity;
 using GraphQL.Types;
+using GraphQl.EfCore.Translate.DotNet;
 
 namespace GraphQL.DotNet.Queries
 {

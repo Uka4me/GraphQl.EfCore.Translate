@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GraphQl.EfCore.Translate
+namespace GraphQl.EfCore.Translate.DotNet
 {
     public static class ServiceCollectionExtensions
     {

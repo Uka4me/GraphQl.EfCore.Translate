@@ -3,14 +3,13 @@ using GraphQl.EfCore.Translate.HotChocolate.Graphs;
 
 namespace GraphQL.HotChocolate.Types
 {
-    public class StudentObject : ObjectType<Student>
+    public class CourseObject : ObjectType<Course>
     {
-        protected override void Configure(IObjectTypeDescriptor<Student> descriptor)
+        protected override void Configure(IObjectTypeDescriptor<Course> descriptor)
         {
-            descriptor.Field(t => t.ID).Type<IntType>();
-            descriptor.Field(t => t.LastName).Type<StringType>();
-            descriptor.Field(t => t.FirstMidName).Type<StringType>();
-            descriptor.Field(t => t.EnrollmentDate).Type<DateTimeType>();
+            descriptor.Field(t => t.CourseID).Type<IntType>();
+            descriptor.Field(t => t.Title).Type<StringType>();
+            descriptor.Field(t => t.Credits).Type<IntType>();
             descriptor.Field(t => t.Enrollments).Type<ListType<EnrollmentObject>>()
                 .Argument("take", a => a.Type<IntType>())
                 .Argument("skip", a => a.Type<IntType>())

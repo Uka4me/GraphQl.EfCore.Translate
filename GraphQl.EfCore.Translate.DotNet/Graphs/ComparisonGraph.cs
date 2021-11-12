@@ -3,12 +3,11 @@ using GraphQL.Language.AST;
 using GraphQL.Types;
 using System;
 
-namespace GraphQl.EfCore.Translate
+namespace GraphQl.EfCore.Translate.DotNet
 {
-    public class ComparisonGraph :
-        EnumerationGraphType
+    public class ComparisonGraph : EnumerationGraphType<Comparison>
     {
-        public ComparisonGraph()
+        /*public ComparisonGraph()
         {
             Name = nameof(Comparison);
             AddValue("contains", null, Comparison.Contains);
@@ -22,7 +21,7 @@ namespace GraphQl.EfCore.Translate
             AddValue("lessThanOrEqual", null, Comparison.LessThanOrEqual);
             AddValue("like", null, Comparison.Like);
             AddValue("startsWith", null, Comparison.StartsWith);
-        }
+        }*/
 
         public override bool CanParseLiteral(IValue value)
         {

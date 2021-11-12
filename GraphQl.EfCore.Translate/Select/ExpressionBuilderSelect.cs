@@ -1,6 +1,4 @@
 ﻿using GraphQl.EfCore.Translate.Select.Graphs;
-using GraphQL;
-using GraphQL.Language.AST;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -93,7 +91,8 @@ namespace GraphQl.EfCore.Translate
 							{
 								if (f.Arguments.ContainsKey("where"))
 								{
-									string jsonString = JsonSerializer.Serialize(f.Arguments["where"]);
+									var wh = f.Arguments["where"];
+									string jsonString = JsonSerializer.Serialize(wh);
 									var options = new JsonSerializerOptions();
 									options.Converters.Add(new JsonStringEnumConverter());
 									options.PropertyNameCaseInsensitive = true;
@@ -121,7 +120,7 @@ namespace GraphQl.EfCore.Translate
 							{
 								if (f.Arguments.ContainsKey("orderBy"))
 								{
-									where = OrderBy(where, sourceElementType, (string)f.Arguments["orderBy"]);
+									where = OrderBy(where, sourceElementType, f.Arguments["orderBy"].ToString());
 								}
 
 							}
@@ -134,7 +133,7 @@ namespace GraphQl.EfCore.Translate
 							{
 								if (f.Arguments.ContainsKey("skip"))
 								{
-									where = Skip(where, sourceElementType, (int)f.Arguments["skip"]);
+									where = Skip(where, sourceElementType, int.Parse(f.Arguments["skip"].ToString()));
 								}
 
 							}
@@ -147,7 +146,7 @@ namespace GraphQl.EfCore.Translate
 							{
 								if (f.Arguments.ContainsKey("take"))
 								{
-									where = Take(where, sourceElementType, (int)f.Arguments["take"]);
+									where = Take(where, sourceElementType, int.Parse(f.Arguments["take"].ToString()));
 								}
 							}
 							catch
