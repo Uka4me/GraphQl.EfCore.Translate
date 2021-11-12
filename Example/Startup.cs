@@ -31,7 +31,7 @@ namespace GraphQl.EfCore.Translate.Example
             // services.AddDbContext<SchoolContext>(options => options.UseInMemoryDatabase("Test"));
             services.AddPooledDbContextFactory<SchoolContext>(options => {
                 options.UseInMemoryDatabase("Test");
-                options.LogTo(Console.WriteLine);
+                /*options.LogTo(Console.WriteLine);*/
             });
 
             // GrapQL-dotnet ============================================

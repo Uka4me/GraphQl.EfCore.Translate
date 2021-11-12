@@ -1,11 +1,8 @@
-﻿using GraphQl.EfCore.Translate;
-using GraphQl.EfCore.Translate.Select.Graphs;
+﻿using GraphQl.EfCore.Translate.Select.Graphs;
 using HotChocolate.Execution.Processing;
 using HotChocolate.Language;
 using HotChocolate.Resolvers;
-using HotChocolate.Types;
 using HotChocolate.Utilities;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace GraphQl.EfCore.Translate.HotChocolate

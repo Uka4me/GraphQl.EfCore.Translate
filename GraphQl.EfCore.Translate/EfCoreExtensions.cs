@@ -17,7 +17,6 @@ namespace GraphQl.EfCore.Translate
 		}
 		public static IQueryable<T> GraphQlSelect<T>(IQueryable<T> queryable, List<NodeGraph> fields)
 		{
-			// var items = ConvertFieldToNodeGraph(fields is null ? context.SubFields.Select(x => x.Value) : fields, context);
 			var lambdaSelect = ExpressionBuilderSelect<T>.BuildPredicate(fields);
 			return queryable.Select(lambdaSelect);
 		}
