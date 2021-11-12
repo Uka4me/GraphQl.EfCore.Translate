@@ -7,8 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace GraphQl.EfCore.Translate
 {
-
-    public static class ExpressionBuilderWhere<T>
+    static class ExpressionBuilderWhere<T>
     {
         const string LIST_PROPERTY_PATTERN = @"\[(.*)\]";
 

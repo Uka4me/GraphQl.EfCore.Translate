@@ -12,6 +12,7 @@ namespace GraphQL.HotChocolate.Types
             descriptor.Field(t => t.Grade).Type<GradeEnum>();
             descriptor.Field(t => t.Course).Type<CourseObject>();
             descriptor.Field(t => t.Student).Type<StudentObject>();
+            descriptor.Field("test").Type<StringType>().Resolve(x => "Привет");
         }
     }
 }

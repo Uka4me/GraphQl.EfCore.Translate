@@ -11,6 +11,10 @@ namespace GraphQl.EfCore.Translate
 {
 	public static class EfCoreExtensions
 	{
+		public static void AddCalculatedField<T>(string path, Func<Expression, Expression> func)
+		{
+			ExpressionBuilderSelect<T>.AddCalculatedField(path, func);
+		}
 		public static IQueryable<T> GraphQlSelect<T>(IQueryable<T> queryable, List<NodeGraph> fields)
 		{
 			// var items = ConvertFieldToNodeGraph(fields is null ? context.SubFields.Select(x => x.Value) : fields, context);

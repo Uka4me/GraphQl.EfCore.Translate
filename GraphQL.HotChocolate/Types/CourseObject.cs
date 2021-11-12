@@ -10,6 +10,7 @@ namespace GraphQL.HotChocolate.Types
             descriptor.Field(t => t.CourseID).Type<IntType>();
             descriptor.Field(t => t.Title).Type<StringType>();
             descriptor.Field(t => t.Credits).Type<IntType>();
+            descriptor.Field("test").Type<StringType>().Resolve(x => "Привет");
             descriptor.Field(t => t.Enrollments).Type<ListType<EnrollmentObject>>()
                 .Argument("take", a => a.Type<IntType>())
                 .Argument("skip", a => a.Type<IntType>())

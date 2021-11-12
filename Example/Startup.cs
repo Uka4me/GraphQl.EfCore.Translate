@@ -1,4 +1,7 @@
 using Entity;
+using Entity.Models;
+using GraphQl.EfCore.Translate.DotNet;
+using GraphQl.EfCore.Translate.HotChocolate;
 using GraphQL;
 using GraphQL.DotNet;
 using GraphQL.DotNet.Queries;
@@ -32,10 +35,11 @@ namespace GraphQl.EfCore.Translate.Example
             });
 
             // GrapQL-dotnet ============================================
-            services.AddSingleton<GraphQl.EfCore.Translate.DotNet.StringComparisonGraph>();
+            services.AddEFCoreGraphQLDotNet();
+            /*services.AddSingleton<GraphQl.EfCore.Translate.DotNet.StringComparisonGraph>();
             services.AddSingleton<GraphQl.EfCore.Translate.DotNet.WhereExpressionGraph>();
             services.AddSingleton<GraphQl.EfCore.Translate.DotNet.ComparisonGraph>();
-            services.AddSingleton<GraphQl.EfCore.Translate.DotNet.ConnectorGraph>();
+            services.AddSingleton<GraphQl.EfCore.Translate.DotNet.ConnectorGraph>();*/
             services.AddSingleton<MainQuery>();
             services.AddSingleton<GraphQLSchema>();
 
@@ -48,17 +52,19 @@ namespace GraphQl.EfCore.Translate.Example
 
 
             // HotChocolate ==============================================
-            services.AddSingleton<GraphQl.EfCore.Translate.HotChocolate.StringComparisonGraph>();
+            services.AddEFCoreGraphQLHotChocolate();
+            /*services.AddSingleton<GraphQl.EfCore.Translate.HotChocolate.StringComparisonGraph>();
             services.AddSingleton<GraphQl.EfCore.Translate.HotChocolate.WhereExpressionGraph>();
             services.AddSingleton<GraphQl.EfCore.Translate.HotChocolate.ComparisonGraph>();
-            services.AddSingleton<GraphQl.EfCore.Translate.HotChocolate.ConnectorGraph>();
+            services.AddSingleton<GraphQl.EfCore.Translate.HotChocolate.ConnectorGraph>();*/
 
             services
                 .AddGraphQLServer()
                 .AddType<GraphQL.HotChocolate.Types.CourseObject>()
                 .AddType<GraphQL.HotChocolate.Types.EnrollmentObject>()
                 .AddType<GraphQL.HotChocolate.Types.StudentObject>()
-                .AddQueryType<StudentQuery>();
+                .AddType<GraphQL.HotChocolate.Types.PageInfoObject<GraphQL.HotChocolate.Types.StudentObject, Student>>()
+                .AddQueryType<Query>();
             // ===========================================================
         }
 

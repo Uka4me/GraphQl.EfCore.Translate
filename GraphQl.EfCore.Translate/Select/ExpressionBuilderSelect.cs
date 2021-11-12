@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace GraphQl.EfCore.Translate
 {
-    public static class ExpressionBuilderSelect<T>
+    static class ExpressionBuilderSelect<T>
     {
 		public static ConcurrentDictionary<string, Func<Expression, Expression>> CalculatedFields = new();
 		const BindingFlags bindingFlagsPublic = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase | BindingFlags.FlattenHierarchy;
@@ -118,9 +118,9 @@ namespace GraphQl.EfCore.Translate
 
 							try
 							{
-								if (f.Arguments.ContainsKey("orderBy"))
+								if (f.Arguments.ContainsKey("orderby"))
 								{
-									where = OrderBy(where, sourceElementType, f.Arguments["orderBy"].ToString());
+									where = OrderBy(where, sourceElementType, f.Arguments["orderby"].ToString());
 								}
 
 							}
