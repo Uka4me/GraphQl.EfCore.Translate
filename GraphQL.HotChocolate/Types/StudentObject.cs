@@ -1,5 +1,5 @@
 ﻿using Entity.Models;
-using GraphQl.EfCore.Translate.HotChocolate.Graphs;
+using GraphQl.EfCore.Translate.HotChocolate;
 
 namespace GraphQL.HotChocolate.Types
 {

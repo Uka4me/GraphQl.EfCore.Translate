@@ -6,6 +6,7 @@ using GraphQL.Types;
 using System.Collections.Generic;
 using Entity.Models;
 using GraphQl.EfCore.Translate.DotNet;
+using Microsoft.EntityFrameworkCore;
 
 namespace GraphQL.DotNet.Queries
 {
@@ -18,7 +19,8 @@ namespace GraphQL.DotNet.Queries
 			  arguments: MainQuery.commonArguments,
 			  resolve: context => {
 				  using var scope = context.RequestServices.CreateScope();
-				  var dbContext = scope.ServiceProvider.GetRequiredService<SchoolContext>();
+				  var dbContextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<SchoolContext>>();
+				  SchoolContext dbContext = dbContextFactory.CreateDbContext();
 
 				  var query = dbContext.Students
 							  .GraphQlWhere(context)

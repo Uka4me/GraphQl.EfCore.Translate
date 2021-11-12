@@ -1,8 +1,7 @@
 ﻿
-using GraphQl.EfCore.Translate;
 using HotChocolate.Types;
 
-namespace GraphQl.EfCore.Translate.HotChocolate.Graphs
+namespace GraphQl.EfCore.Translate.HotChocolate
 {
 
     public class WhereExpressionGraph : InputObjectType<WhereExpression>
@@ -17,17 +16,5 @@ namespace GraphQl.EfCore.Translate.HotChocolate.Graphs
             descriptor.Field(t => t.Connector).Type<ConnectorGraph>().DefaultValue(Connector.And);
             descriptor.Field(t => t.GroupedExpressions).Type<ListType<WhereExpressionGraph>>();
         }
-        /*public WhereExpressionGraph()
-        {
-            Name = nameof(WhereExpression);
-            Field(x => x.Path, true);
-            Field<ComparisonGraph>("Comparison", null, null, _ => _.Source!.Comparison);
-            Field(x => x.Negate, true);
-            Field<StringComparisonGraph>("Case", null, null, _ => _.Source!.Case);
-            Field(x => x.Value, true);
-            Field<ConnectorGraph>("Connector", null, null, _ => _.Source!.Connector);
-            Field<ListGraphType<WhereExpressionGraph>>(
-                name: "GroupedExpressions");
-        }*/
     }
 }

@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <RepositoryUrl>https://github.com/Uka4me/GraphQl.EfCore.Translate</RepositoryUrl>
+    <!--<RepositoryUrl>https://github.com/Uka4me/GraphQl.EfCore.Translate</RepositoryUrl>
     <PackageTags>GraphQL; EntityFrameworkCore; .NetCore; graphql-dotnet</PackageTags>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Version>2.0.0</Version>
+    <Version>2.0.0</Version>-->
   </PropertyGroup>
 
   <ItemGroup>

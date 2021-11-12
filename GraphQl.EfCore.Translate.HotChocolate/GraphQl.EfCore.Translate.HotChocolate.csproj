@@ -4,6 +4,11 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+	<RepositoryUrl>https://github.com/Uka4me/GraphQl.EfCore.Translate</RepositoryUrl>
+	<PackageTags>GraphQL; EntityFrameworkCore; .NetCore; HotChocolate</PackageTags>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	<Version>3.0.0</Version>
+	<TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,7 +16,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GraphQl.EfCore.Translate\GraphQl.EfCore.Translate.csproj" />
+	<ProjectReference Include="..\GraphQl.EfCore.Translate\GraphQl.EfCore.Translate.csproj">
+		<ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+		<IncludeAssets>GraphQl.EfCore.Translate.dll</IncludeAssets>
+	</ProjectReference>
   </ItemGroup>
 
+	<Target DependsOnTargets="ResolveReferences" Name="CopyProjectReferencesToPackage">
+		<ItemGroup>
+			<BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))"/>
+		</ItemGroup>
+	</Target>
 </Project>

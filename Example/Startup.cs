@@ -1,5 +1,4 @@
 using Entity;
-using GraphQl.EfCore.Translate.DotNet;
 using GraphQL;
 using GraphQL.DotNet;
 using GraphQL.DotNet.Queries;
@@ -13,9 +12,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace GraphQl.EfCore.Translate.Example
 {
@@ -35,7 +31,11 @@ namespace GraphQl.EfCore.Translate.Example
                 options.LogTo(Console.WriteLine);
             });
 
-            services.AddGraphQLTranslate();
+            // GrapQL-dotnet ============================================
+            services.AddSingleton<GraphQl.EfCore.Translate.DotNet.StringComparisonGraph>();
+            services.AddSingleton<GraphQl.EfCore.Translate.DotNet.WhereExpressionGraph>();
+            services.AddSingleton<GraphQl.EfCore.Translate.DotNet.ComparisonGraph>();
+            services.AddSingleton<GraphQl.EfCore.Translate.DotNet.ConnectorGraph>();
             services.AddSingleton<MainQuery>();
             services.AddSingleton<GraphQLSchema>();
 
@@ -44,14 +44,22 @@ namespace GraphQl.EfCore.Translate.Example
                 .AddGraphTypes(ServiceLifetime.Scoped)
                 .AddSystemTextJson()
                 .AddGraphTypes(typeof(GraphQLSchema));
+            // ===========================================================
+
+
+            // HotChocolate ==============================================
+            services.AddSingleton<GraphQl.EfCore.Translate.HotChocolate.StringComparisonGraph>();
+            services.AddSingleton<GraphQl.EfCore.Translate.HotChocolate.WhereExpressionGraph>();
+            services.AddSingleton<GraphQl.EfCore.Translate.HotChocolate.ComparisonGraph>();
+            services.AddSingleton<GraphQl.EfCore.Translate.HotChocolate.ConnectorGraph>();
 
             services
                 .AddGraphQLServer()
                 .AddType<GraphQL.HotChocolate.Types.CourseObject>()
                 .AddType<GraphQL.HotChocolate.Types.EnrollmentObject>()
                 .AddType<GraphQL.HotChocolate.Types.StudentObject>()
-                .AddType<GraphQl.EfCore.Translate.HotChocolate.Graphs.WhereExpressionGraph>()
                 .AddQueryType<StudentQuery>();
+            // ===========================================================
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -66,7 +74,7 @@ namespace GraphQl.EfCore.Translate.Example
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGraphQL<GraphQLSchema>();
+                endpoints.MapGraphQL<GraphQLSchema>("/dotnet");
                 endpoints.MapGraphQL("/hotchocolate");
             });
         }
