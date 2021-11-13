@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -41,7 +42,9 @@ namespace GraphQl.EfCore.Translate
 			var target = Expression.Constant(null, targetType);
 			foreach (var memberGroup in memberPaths.GroupBy(path => path[depth]))
 			{
+				Expression targetValue = null;
 				String memberName = memberGroup.Key;
+				var childMembers = memberGroup.Where(path => depth + 1 < path.Length).ToList();
 
 				MemberExpression targetMember = GetMemberFromProperty(target.Type, memberName);
 				MemberExpression sourceMember = GetMemberFromProperty(
@@ -53,122 +56,114 @@ namespace GraphQl.EfCore.Translate
 					continue;
 				}
 
-				/*var propertyOrFieldTarget = GetPropertyOrField(target.Type, memberName);
-                var propertyOrFieldSource = GetPropertyOrField(source.Type, memberName);
-                var targetMember = Expression.PropertyOrField(target, propertyOrFieldTarget.Name);
-                var sourceMember = Expression.PropertyOrField(source, propertyOrFieldSource.Name);*/
-				var childMembers = memberGroup.Where(path => depth + 1 < path.Length).ToList();
+				if (targetMember.Member.GetCustomAttribute(typeof(NotMappedAttribute)) is not null) {
+					var calculatedFields = (ConcurrentDictionary<string, Func<Expression, Expression>>)(typeof(ExpressionBuilderSelect<>)
+						.MakeGenericType(source.Type)
+						.GetField("CalculatedFields")
+						.GetValue(null));
+					var calcField = calculatedFields.ContainsKey(memberName.ToLower()) ? calculatedFields[memberName.ToLower()]?.Invoke(source) : null;
 
-				var calculatedFields = (ConcurrentDictionary<string, Func<Expression, Expression>>)(typeof(ExpressionBuilderSelect<>).MakeGenericType(source.Type).GetField("CalculatedFields").GetValue(null));
-
-				Expression targetValue = null;
-				if (!childMembers.Any() || calculatedFields.ContainsKey(memberName))
+					if (calcField is not null) {
+						targetValue = calcField;
+					} else {
+						continue;
+					}
+				} else if (!childMembers.Any()) {
+					targetValue = sourceMember;
+				}
+				else if (IsEnumerableType(targetMember.Type, out var sourceElementType) &&
+						IsEnumerableType(targetMember.Type, out var targetElementType))
 				{
-					if (calculatedFields.ContainsKey(memberName))
+					// var sourceElementParam = Expression.Parameter(sourceElementType, "e");
+					var sourceElementParam = (ParameterExpression)(typeof(PropertyCache<>).MakeGenericType(sourceElementType).GetField("SourceParameter").GetValue(null));
+					targetValue = MakePredicateBody(targetElementType, sourceElementParam, childMembers, fields, depth + 1);
+
+					var f = fields.FirstOrDefault(x => x.Path == memberName);
+					Expression where = sourceMember;
+
+					if (f != null)
 					{
-						targetValue = calculatedFields[memberName].Invoke(source);
+						try
+						{
+							if (f.Arguments.ContainsKey("where"))
+							{
+								var wh = f.Arguments["where"];
+								string jsonString = JsonSerializer.Serialize(wh);
+								var options = new JsonSerializerOptions();
+								options.Converters.Add(new JsonStringEnumConverter());
+								options.PropertyNameCaseInsensitive = true;
+								IEnumerable<WhereExpression> w = JsonSerializer.Deserialize<IEnumerable<WhereExpression>>(jsonString, options);
+
+								var m = typeof(ExpressionBuilderWhere<>).MakeGenericType(sourceElementType).GetMethod("BuildPredicate", new Type[] { typeof(IEnumerable<WhereExpression>) });
+								Expression predicate = (Expression)m.Invoke(null, new[] { w });
+
+								where = Expression.Call(
+									typeof(Enumerable),
+									nameof(Enumerable.Where),
+									new Type[] { sourceElementType },
+									where,
+									predicate
+								);
+							}
+
+						}
+						catch
+						{
+							throw new($"Failed to execute Where on path \"{f.Path}\".");
+						}
+
+						try
+						{
+							if (f.Arguments.ContainsKey("orderby"))
+							{
+								where = OrderBy(where, sourceElementType, f.Arguments["orderby"].ToString());
+							}
+
+						}
+						catch
+						{
+							throw new($"Failed to execute OrderBy on path \"{f.Path}\".");
+						}
+
+						try
+						{
+							if (f.Arguments.ContainsKey("skip"))
+							{
+								where = Skip(where, sourceElementType, int.Parse(f.Arguments["skip"].ToString()));
+							}
+
+						}
+						catch
+						{
+							throw new($"Failed to execute Skip on path \"{f.Path}\".");
+						}
+
+						try
+						{
+							if (f.Arguments.ContainsKey("take"))
+							{
+								where = Take(where, sourceElementType, int.Parse(f.Arguments["take"].ToString()));
+							}
+						}
+						catch
+						{
+							throw new($"Failed to execute Take on path \"{f.Path}\".");
+						}
 					}
-					else
-					{
-						targetValue = sourceMember;
-					}
+
+					targetValue = Expression.Call(typeof(Enumerable), nameof(Enumerable.Select),
+						new[] { sourceElementType, targetElementType }, where,
+						Expression.Lambda(targetValue, sourceElementParam));
+
+					targetValue = CorrectEnumerableResult(targetValue, targetElementType, targetMember.Type);
 				}
 				else
 				{
-					if (IsEnumerableType(targetMember.Type, out var sourceElementType) &&
-						IsEnumerableType(targetMember.Type, out var targetElementType))
-					{
-						// var sourceElementParam = Expression.Parameter(sourceElementType, "e");
-						var sourceElementParam = (ParameterExpression)(typeof(PropertyCache<>).MakeGenericType(sourceElementType).GetField("SourceParameter").GetValue(null));
-						targetValue = MakePredicateBody(targetElementType, sourceElementParam, childMembers, fields, depth + 1);
-
-						var f = fields.FirstOrDefault(x => x.Path == memberName);
-						Expression where = sourceMember;
-
-						if (f != null)
-						{
-							try
-							{
-								if (f.Arguments.ContainsKey("where"))
-								{
-									var wh = f.Arguments["where"];
-									string jsonString = JsonSerializer.Serialize(wh);
-									var options = new JsonSerializerOptions();
-									options.Converters.Add(new JsonStringEnumConverter());
-									options.PropertyNameCaseInsensitive = true;
-									IEnumerable<WhereExpression> w = JsonSerializer.Deserialize<IEnumerable<WhereExpression>>(jsonString, options);
-
-									var m = typeof(ExpressionBuilderWhere<>).MakeGenericType(sourceElementType).GetMethod("BuildPredicate", new Type[] { typeof(IEnumerable<WhereExpression>) });
-									Expression predicate = (Expression)m.Invoke(null, new[] { w });
-
-									where = Expression.Call(
-										typeof(Enumerable),
-										nameof(Enumerable.Where),
-										new Type[] { sourceElementType },
-										where,
-										predicate
-									);
-								}
-
-							}
-							catch
-							{
-								throw new($"Failed to execute Where on path \"{f.Path}\".");
-							}
-
-							try
-							{
-								if (f.Arguments.ContainsKey("orderby"))
-								{
-									where = OrderBy(where, sourceElementType, f.Arguments["orderby"].ToString());
-								}
-
-							}
-							catch
-							{
-								throw new($"Failed to execute OrderBy on path \"{f.Path}\".");
-							}
-
-							try
-							{
-								if (f.Arguments.ContainsKey("skip"))
-								{
-									where = Skip(where, sourceElementType, int.Parse(f.Arguments["skip"].ToString()));
-								}
-
-							}
-							catch
-							{
-								throw new($"Failed to execute Skip on path \"{f.Path}\".");
-							}
-
-							try
-							{
-								if (f.Arguments.ContainsKey("take"))
-								{
-									where = Take(where, sourceElementType, int.Parse(f.Arguments["take"].ToString()));
-								}
-							}
-							catch
-							{
-								throw new($"Failed to execute Take on path \"{f.Path}\".");
-							}
-						}
-
-						targetValue = Expression.Call(typeof(Enumerable), nameof(Enumerable.Select),
-							new[] { sourceElementType, targetElementType }, where,
-							Expression.Lambda(targetValue, sourceElementParam));
-
-						targetValue = CorrectEnumerableResult(targetValue, targetElementType, targetMember.Type);
-					}
-					else
-					{
-						targetValue = Expression.Condition(
-							Expression.Equal(sourceMember, Expression.Constant(null, sourceMember.Type)),
-							Expression.Constant(null, sourceMember.Type),
-							MakePredicateBody(targetMember.Type, sourceMember, childMembers, fields, depth + 1)
-						);
-					}
+					targetValue = Expression.Condition(
+						Expression.Equal(sourceMember, Expression.Constant(null, sourceMember.Type)),
+						Expression.Constant(null, sourceMember.Type),
+						MakePredicateBody(targetMember.Type, sourceMember, childMembers, fields, depth + 1)
+					);
 				}
 
 				bindings.Add(Expression.Bind(targetMember.Member, targetValue));

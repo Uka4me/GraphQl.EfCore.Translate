@@ -20,6 +20,8 @@ namespace GraphQL.DotNet.Types
             Field(m => m.FirstMidName);
             Field(m => m.EnrollmentDate);
             Field<StringGraphType>("Test", resolve: m => "Привет");
+            Field(m => m.CalculatedField);
+            Field(m => m.CalculatedField2);
             Field(
                 name: "Enrollments",
                 type: typeof(ListGraphType<EnrollmentObject>),

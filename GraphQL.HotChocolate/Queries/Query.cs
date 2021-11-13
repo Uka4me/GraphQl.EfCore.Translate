@@ -4,11 +4,23 @@ using HotChocolate.Resolvers;
 using GraphQl.EfCore.Translate.HotChocolate;
 using GraphQl.EfCore.Translate;
 using Entity.Classes;
+using System.Linq.Expressions;
 
 namespace GraphQL.HotChocolate.Queries
 {
     public class Query
     {
+        public Query() {
+            EfCoreExtensionsHotChocolate.AddCalculatedField<Student>("CalculatedField", (source) => {
+                return Expression.Constant("The \"calculatedField2\" field contains the number of evaluations equal to A for all its subjects", typeof(string));
+            });
+            EfCoreExtensionsHotChocolate.AddCalculatedField<Student>("CalculatedField2", (source) => {
+                var parameter = (ParameterExpression)source;
+                Expression<Func<Student, int>> func = x => x.Enrollments.Count(e => e.Grade == Grade.A);
+                return Expression.Lambda(Expression.Invoke(func, parameter), parameter).Body;
+            });
+        }
+
         [UseDbContext(typeof(SchoolContext))]
         public PageInfo<Student> GetPageStudents([ScopedService] SchoolContext dbContext, IResolverContext context, int take = 0, int skip = 0, string orderBy = "", List<WhereExpression>? where = default)
         {

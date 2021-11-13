@@ -13,7 +13,7 @@ namespace GraphQl.EfCore.Translate
 	{
 		public static void AddCalculatedField<T>(string path, Func<Expression, Expression> func)
 		{
-			ExpressionBuilderSelect<T>.AddCalculatedField(path, func);
+			ExpressionBuilderSelect<T>.AddCalculatedField(path.ToLower(), func);
 		}
 		public static IQueryable<T> GraphQlSelect<T>(IQueryable<T> queryable, List<NodeGraph> fields)
 		{
