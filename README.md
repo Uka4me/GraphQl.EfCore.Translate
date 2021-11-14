@@ -12,6 +12,10 @@ The project is split into two libraries:
 - `GraphQl.EfCore.Translate.DotNet` [![NuGet version](https://badge.fury.io/nu/GraphQl.EfCore.Translate.DotNet.svg)](https://badge.fury.io/nu/GraphQl.EfCore.Translate.DotNet)
 - `GraphQl.EfCore.Translate.HotChocolate` [![NuGet version](https://badge.fury.io/nu/GraphQl.EfCore.Translate.HotChocolate.svg)](https://badge.fury.io/nu/GraphQl.EfCore.Translate.HotChocolate)
 
+<p align="center">
+  <img src="scheme.svg" width="100%" />
+</p>
+
 ## Documentation
 [Wiki](https://github.com/Uka4me/GraphQl.EfCore.Translate/wiki)
 
