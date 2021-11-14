@@ -57,34 +57,32 @@ public List<Student> GetStudents([ScopedService] SchoolContext dbContext, IResol
 }
 ```
 
-Now you can run a simple GraphQL query. We will get the first 30 students and in the linked data we will only take courses with an "A" or "B" grade.
+Now you can run a simple GraphQL query. We will get the first 30 students and in the linked data we will only take courses with "Calculus".
 
 ```graphql
 query {
   students(
-    skip: 0,
     take: 30,
     orderBy: "enrollmentDate desc",
-    where: [
-      {
-        path: "enrollmentDate", comparison: "lessThanOrEqual", value: "2005-01-01"
-      }
-    ]
+    where: $where
   ) {
-    iD
-    lastName
-    enrollmentDate
-    enrollments(
-      orderBy: "grade",
+    ID
+    LastName
+    CalculatedField
+    CalculatedField2
+    EnrollmentDate
+    Enrollments(
+      orderBy: "grade, course.title",
       where: [
         {
-          path: "grade", comparison: "in", value: ["A", "B"]
+          Path: "Course.Title", Value: "Calculus"
         }
       ]
     ) {
-      grade
-      course {
-        title
+      Grade
+      Course {
+        Title
+        Test
       }
     }
   }
@@ -93,24 +91,23 @@ query {
 
 This query will be equivalent to the following expression
 
-```C#
-var query = dbContext.Students
-  .Where(x => x.EnrollmentDate <= DateTime.Parse("01.01.2005"))
-  .OrderByDescending(x => x.EnrollmentDate)
-  .Skip(0)
-  .Take(30)
-  .Select(x => new Student {
-    ID = x.ID,
-    LastName = x.LastName,
-    EnrollmentDate = x.EnrollmentDate,
-    Enrollments = x.Enrollments
-                .Where(c => (new string[] {"A", "B"}).Contains(c.Grade))
-                .OrderBy(x => x.Grade)
-                .Select(c => new Enrollment {
-                  Grade = c.Grade,
-                  Course = new Course {
-		     Title = c.Course.Title
-		  }
-                })
-  });
+```sql
+SELECT t."ID", t."LastName", t.c, t."EnrollmentDate", t0."Grade", t0.c, t0."Title", t0."EnrollmentID", t0."CourseID"
+FROM (
+    SELECT s."ID", s."LastName", (
+        SELECT COUNT(*)::INT
+        FROM "Enrollments" AS e
+        WHERE (s."ID" = e."StudentID") AND (e."Grade" = 0)) AS c, s."EnrollmentDate"
+    FROM "Students" AS s
+    WHERE s."EnrollmentDate" <= TIMESTAMPTZ '2005-01-01 00:00:00Z'
+    ORDER BY s."EnrollmentDate" DESC
+    LIMIT @__p_1 OFFSET @__p_0
+) AS t
+LEFT JOIN (
+    SELECT e0."Grade", FALSE AS c, c."Title", e0."EnrollmentID", c."CourseID", e0."StudentID"
+    FROM "Enrollments" AS e0
+    INNER JOIN "Courses" AS c ON e0."CourseID" = c."CourseID"
+    WHERE c."Title" = 'Calculus'
+) AS t0 ON t."ID" = t0."StudentID"
+ORDER BY t."EnrollmentDate" DESC, t."ID", t0."Grade", t0."Title", t0."EnrollmentID"
 ```
