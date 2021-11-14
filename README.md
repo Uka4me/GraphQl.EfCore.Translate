@@ -26,11 +26,15 @@ No special settings or circuit changes are required to get started. Check out th
 
 ## Install the package
 
+Package for [GraphQL-DotNet](https://github.com/graphql-dotnet/graphql-dotnet) project
+
 ```powershell
 Install-Package GraphQl.EfCore.Translate.DotNet
 ```
 
 Or
+
+Package for [HotChocolate](https://github.com/ChilliCream/hotchocolate) project
 
 ```powershell
 Install-Package GraphQl.EfCore.Translate.HotChocolate
