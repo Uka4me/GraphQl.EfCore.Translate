@@ -65,6 +65,8 @@ Field<ListGraphType<StudentObject>, List<Student>>("students")
 
 Now you can run a simple GraphQL query. We will get the first 30 students and in the linked data we will only take courses with "Calculus".
 
+>The fields "CalculatedField" and "CalculatedField2" are calculated fields from the example in the repository. "CalculatedField" is a constant, so it will not be present in the SQL query.
+
 ```graphql
 query {
   students(
