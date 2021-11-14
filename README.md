@@ -2,7 +2,7 @@
 
 Hello :wave:
 
-The package adds extensions to EntityFrameworkCore that allow you to transform a GraphQL query into an EntityFrameworkCore query. The project solves the problem of a large amount of data dumping, filtering related data and adding calculated fields. 
+The package adds extensions to EntityFrameworkCore that allow you to transform a GraphQL query into an EntityFrameworkCore query. The project solves the problem of a large amount of data dumping :elephant:, filtering related data :vertical_traffic_light: and adding calculated fields :bomb:. 
 
 The library is designed to work with [GraphQL](https://github.com/graphql-dotnet/graphql-dotnet) and [HotChocolate](https://github.com/ChilliCream/hotchocolate) projects.
 
@@ -19,6 +19,18 @@ The project is split into two libraries:
 
 - [Start for GraphQl.EfCore.Translate.DotNet](/README_DotNet.md)
 - [Start for GraphQl.EfCore.Translate.HotChocolate](/README_HotChocolate.md)
+
+## Install the package
+
+```powershell
+Install-Package GraphQl.EfCore.Translate.DotNet
+```
+
+Or
+
+```powershell
+Install-Package GraphQl.EfCore.Translate.HotChocolate
+```
 
 ## Dependencies versions
 
