@@ -28,7 +28,7 @@ namespace GraphQl.EfCore.Translate
 			return Expression.Lambda<Func<T, T>>(body, param);
 		}
 
-		static Expression MakePredicateBody(Type targetType, Expression source, IEnumerable<string[]> memberPaths, List<NodeGraph> fields, int depth = 0)
+		static Expression MakePredicateBody(Type targetType, Expression source, IEnumerable<string[]> memberPaths, List<NodeGraph> fields, int depth = 0, string? keys = null)
 		{
 			String pathSource = null;
 			Type typeSource = null;
@@ -44,6 +44,7 @@ namespace GraphQl.EfCore.Translate
 			{
 				Expression targetValue = null;
 				String memberName = memberGroup.Key;
+				String memberNameFull = string.IsNullOrWhiteSpace(keys) ? memberName : $"{keys}.{memberName}";
 				var childMembers = memberGroup.Where(path => depth + 1 < path.Length).ToList();
 
 				MemberExpression targetMember = GetMemberFromProperty(target.Type, memberName);
@@ -76,9 +77,9 @@ namespace GraphQl.EfCore.Translate
 				{
 					// var sourceElementParam = Expression.Parameter(sourceElementType, "e");
 					var sourceElementParam = (ParameterExpression)(typeof(PropertyCache<>).MakeGenericType(sourceElementType).GetField("SourceParameter").GetValue(null));
-					targetValue = MakePredicateBody(targetElementType, sourceElementParam, childMembers, fields, depth + 1);
+					targetValue = MakePredicateBody(targetElementType, sourceElementParam, childMembers, fields, depth + 1, memberNameFull);
 
-					var f = fields.FirstOrDefault(x => x.Path == memberName);
+					var f = fields.FirstOrDefault(x => x.Path == memberNameFull);
 					Expression where = sourceMember;
 
 					if (f != null)
@@ -162,7 +163,7 @@ namespace GraphQl.EfCore.Translate
 					targetValue = Expression.Condition(
 						Expression.Equal(sourceMember, Expression.Constant(null, sourceMember.Type)),
 						Expression.Constant(null, sourceMember.Type),
-						MakePredicateBody(targetMember.Type, sourceMember, childMembers, fields, depth + 1)
+						MakePredicateBody(targetMember.Type, sourceMember, childMembers, fields, depth + 1, memberNameFull)
 					);
 				}
 
