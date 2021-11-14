@@ -70,7 +70,11 @@ query {
   students(
     take: 30,
     orderBy: "enrollmentDate desc",
-    where: $where
+    where: [
+      {
+        "Path": "enrollmentDate", "Comparison": "LESS_THAN_OR_EQUAL", "Value": "2005-01-01"
+      }
+    ]
   ) {
     ID
     LastName
