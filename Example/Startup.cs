@@ -28,18 +28,12 @@ namespace GraphQl.EfCore.Translate.Example
 
         public void ConfigureServices(IServiceCollection services)
         {
-            // services.AddDbContext<SchoolContext>(options => options.UseInMemoryDatabase("Test"));
             services.AddPooledDbContextFactory<SchoolContext>(options => {
                 options.UseInMemoryDatabase("Test");
-                /*options.LogTo(Console.WriteLine);*/
             });
 
             // GrapQL-dotnet ============================================
             services.AddEFCoreGraphQLDotNet();
-            /*services.AddSingleton<GraphQl.EfCore.Translate.DotNet.StringComparisonGraph>();
-            services.AddSingleton<GraphQl.EfCore.Translate.DotNet.WhereExpressionGraph>();
-            services.AddSingleton<GraphQl.EfCore.Translate.DotNet.ComparisonGraph>();
-            services.AddSingleton<GraphQl.EfCore.Translate.DotNet.ConnectorGraph>();*/
             services.AddSingleton<MainQuery>();
             services.AddSingleton<GraphQLSchema>();
 
@@ -53,10 +47,6 @@ namespace GraphQl.EfCore.Translate.Example
 
             // HotChocolate ==============================================
             services.AddEFCoreGraphQLHotChocolate();
-            /*services.AddSingleton<GraphQl.EfCore.Translate.HotChocolate.StringComparisonGraph>();
-            services.AddSingleton<GraphQl.EfCore.Translate.HotChocolate.WhereExpressionGraph>();
-            services.AddSingleton<GraphQl.EfCore.Translate.HotChocolate.ComparisonGraph>();
-            services.AddSingleton<GraphQl.EfCore.Translate.HotChocolate.ConnectorGraph>();*/
 
             services
                 .AddGraphQLServer()
