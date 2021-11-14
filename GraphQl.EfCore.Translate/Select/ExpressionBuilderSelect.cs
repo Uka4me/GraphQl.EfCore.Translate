@@ -9,18 +9,17 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace GraphQl.EfCore.Translate
 {
     static class ExpressionBuilderSelect<T>
     {
 		public static ConcurrentDictionary<string, Func<Expression, Expression>> CalculatedFields = new();
-		const BindingFlags bindingFlagsPublic = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase | BindingFlags.FlattenHierarchy;
-
+		
 		public static Func<Expression, Expression> AddCalculatedField(string path, Func<Expression, Expression> func) {
 			return CalculatedFields.GetOrAdd(path, x => func);
 		}
+
 		public static Expression<Func<T, T>> BuildPredicate(List<NodeGraph> fields)
         {
 			var param = PropertyCache<T>.SourceParameter;
@@ -58,118 +57,130 @@ namespace GraphQl.EfCore.Translate
 				}
 
 				if (targetMember.Member.GetCustomAttribute(typeof(NotMappedAttribute)) is not null) {
-					var calculatedFields = (ConcurrentDictionary<string, Func<Expression, Expression>>)(typeof(ExpressionBuilderSelect<>)
-						.MakeGenericType(source.Type)
-						.GetField("CalculatedFields")
-						.GetValue(null));
-					var calcField = calculatedFields.ContainsKey(memberName.ToLower()) ? calculatedFields[memberName.ToLower()]?.Invoke(source) : null;
-
-					if (calcField is not null) {
-						targetValue = calcField;
-					} else {
-						continue;
-					}
+					targetValue = MakeCalculated(source, memberName);
 				} else if (!childMembers.Any()) {
 					targetValue = sourceMember;
 				}
-				else if (IsEnumerableType(targetMember.Type, out var sourceElementType) &&
-						IsEnumerableType(targetMember.Type, out var targetElementType))
+				else if (IsEnumerableType(targetMember.Type, out var sourceElementType) && IsEnumerableType(targetMember.Type, out var targetElementType))
 				{
-					// var sourceElementParam = Expression.Parameter(sourceElementType, "e");
-					var sourceElementParam = (ParameterExpression)(typeof(PropertyCache<>).MakeGenericType(sourceElementType).GetField("SourceParameter").GetValue(null));
-					targetValue = MakePredicateBody(targetElementType, sourceElementParam, childMembers, fields, depth + 1, memberNameFull);
-
-					var f = fields.FirstOrDefault(x => x.Path == memberNameFull);
-					Expression where = sourceMember;
-
-					if (f != null)
-					{
-						try
-						{
-							if (f.Arguments.ContainsKey("where"))
-							{
-								var wh = f.Arguments["where"];
-								string jsonString = JsonSerializer.Serialize(wh);
-								var options = new JsonSerializerOptions();
-								options.Converters.Add(new JsonStringEnumConverter());
-								options.PropertyNameCaseInsensitive = true;
-								IEnumerable<WhereExpression> w = JsonSerializer.Deserialize<IEnumerable<WhereExpression>>(jsonString, options);
-
-								var m = typeof(ExpressionBuilderWhere<>).MakeGenericType(sourceElementType).GetMethod("BuildPredicate", new Type[] { typeof(IEnumerable<WhereExpression>) });
-								Expression predicate = (Expression)m.Invoke(null, new[] { w });
-
-								where = Expression.Call(
-									typeof(Enumerable),
-									nameof(Enumerable.Where),
-									new Type[] { sourceElementType },
-									where,
-									predicate
-								);
-							}
-
-						}
-						catch
-						{
-							throw new($"Failed to execute Where on path \"{f.Path}\".");
-						}
-
-						try
-						{
-							if (f.Arguments.ContainsKey("orderby"))
-							{
-								where = OrderBy(where, sourceElementType, f.Arguments["orderby"].ToString());
-							}
-
-						}
-						catch
-						{
-							throw new($"Failed to execute OrderBy on path \"{f.Path}\".");
-						}
-
-						try
-						{
-							if (f.Arguments.ContainsKey("skip"))
-							{
-								where = Skip(where, sourceElementType, int.Parse(f.Arguments["skip"].ToString()));
-							}
-
-						}
-						catch
-						{
-							throw new($"Failed to execute Skip on path \"{f.Path}\".");
-						}
-
-						try
-						{
-							if (f.Arguments.ContainsKey("take"))
-							{
-								where = Take(where, sourceElementType, int.Parse(f.Arguments["take"].ToString()));
-							}
-						}
-						catch
-						{
-							throw new($"Failed to execute Take on path \"{f.Path}\".");
-						}
-					}
-
-					targetValue = Expression.Call(typeof(Enumerable), nameof(Enumerable.Select),
-						new[] { sourceElementType, targetElementType }, where,
-						Expression.Lambda(targetValue, sourceElementParam));
-
-					targetValue = CorrectEnumerableResult(targetValue, targetElementType, targetMember.Type);
+					targetValue = MakeCollection(targetElementType, sourceElementType, targetMember, sourceMember, childMembers, fields, depth, memberNameFull);
 				}
 				else
 				{
-					targetValue = Expression.Condition(
-						Expression.Equal(sourceMember, Expression.Constant(null, sourceMember.Type)),
-						Expression.Constant(null, sourceMember.Type),
-						MakePredicateBody(targetMember.Type, sourceMember, childMembers, fields, depth + 1, memberNameFull)
-					);
+					targetValue = MakeObject(targetMember, sourceMember, childMembers, fields, depth, memberNameFull);
 				}
 
-				bindings.Add(Expression.Bind(targetMember.Member, targetValue));
+				if (targetValue is not null) {
+					bindings.Add(Expression.Bind(targetMember.Member, targetValue));
+				}
 			}
 			return Expression.MemberInit(Expression.New(targetType), bindings);
+		}
+
+		static Expression MakeCalculated(Expression source, string memberName) {
+			var calculatedFields = (ConcurrentDictionary<string, Func<Expression, Expression>>)(
+						typeof(ExpressionBuilderSelect<>)
+							.MakeGenericType(source.Type)
+							.GetField("CalculatedFields")
+							.GetValue(null)
+						);
+			return calculatedFields.ContainsKey(memberName.ToLower()) ? calculatedFields[memberName.ToLower()]?.Invoke(source) : null;
+		}
+
+		static Expression MakeObject(MemberExpression targetMember, MemberExpression sourceMember, List<string[]> childMembers, List<NodeGraph> fields, int depth, string memberNameFull)
+		{
+			return Expression.Condition(
+				Expression.Equal(sourceMember, Expression.Constant(null, sourceMember.Type)),
+				Expression.Constant(null, sourceMember.Type),
+				MakePredicateBody(targetMember.Type, sourceMember, childMembers, fields, depth + 1, memberNameFull)
+			);
+		}
+
+		static Expression MakeCollection(Type targetElementType, Type sourceElementType, MemberExpression targetMember, MemberExpression sourceMember, List<string[]> childMembers, List<NodeGraph> fields, int depth, string memberNameFull)
+		{
+			var sourceElementParam = (ParameterExpression)(typeof(PropertyCache<>).MakeGenericType(sourceElementType).GetField("SourceParameter").GetValue(null));
+			Expression targetValue = MakePredicateBody(targetElementType, sourceElementParam, childMembers, fields, depth + 1, memberNameFull);
+
+			var field = fields.FirstOrDefault(x => x.Path == memberNameFull);
+			Expression where = sourceMember;
+
+			if (field != null)
+			{
+				try
+				{
+					if (field.Arguments.ContainsKey("where"))
+					{
+						var wh = field.Arguments["where"];
+						string jsonString = JsonSerializer.Serialize(wh);
+						var options = new JsonSerializerOptions();
+						options.Converters.Add(new JsonStringEnumConverter());
+						options.PropertyNameCaseInsensitive = true;
+						IEnumerable<WhereExpression> w = JsonSerializer.Deserialize<IEnumerable<WhereExpression>>(jsonString, options);
+
+						var m = typeof(ExpressionBuilderWhere<>).MakeGenericType(sourceElementType).GetMethod("BuildPredicate", new Type[] { typeof(IEnumerable<WhereExpression>) });
+						Expression predicate = (Expression)m.Invoke(null, new[] { w });
+
+						where = Expression.Call(
+							typeof(Enumerable),
+							nameof(Enumerable.Where),
+							new Type[] { sourceElementType },
+							where,
+							predicate
+						);
+					}
+
+				}
+				catch
+				{
+					throw new($"Failed to execute Where on path \"{field.Path}\".");
+				}
+
+				try
+				{
+					if (field.Arguments.ContainsKey("orderby"))
+					{
+						var m = typeof(ExpressionBuilderOrderBy<>).MakeGenericType(sourceElementType).GetMethod("BuildPredicate", new Type[] { typeof(Expression), typeof(string) });
+						where = (Expression)m.Invoke(null, new object[] { where, field.Arguments["orderby"].ToString() });
+						// where = OrderBy(where, sourceElementType, field.Arguments["orderby"].ToString());
+					}
+
+				}
+				catch
+				{
+					throw new($"Failed to execute OrderBy on path \"{field.Path}\".");
+				}
+
+				try
+				{
+					if (field.Arguments.ContainsKey("skip"))
+					{
+						where = Skip(where, sourceElementType, int.Parse(field.Arguments["skip"].ToString()));
+					}
+
+				}
+				catch
+				{
+					throw new($"Failed to execute Skip on path \"{field.Path}\".");
+				}
+
+				try
+				{
+					if (field.Arguments.ContainsKey("take"))
+					{
+						where = Take(where, sourceElementType, int.Parse(field.Arguments["take"].ToString()));
+					}
+				}
+				catch
+				{
+					throw new($"Failed to execute Take on path \"{field.Path}\".");
+				}
+			}
+
+			targetValue = Expression.Call(typeof(Enumerable), nameof(Enumerable.Select),
+				new[] { sourceElementType, targetElementType }, where,
+				Expression.Lambda(targetValue, sourceElementParam));
+
+			return CorrectEnumerableResult(targetValue, targetElementType, targetMember.Type);
 		}
 
 		static MemberExpression GetMemberFromProperty(Type type, string path)
@@ -227,36 +238,6 @@ namespace GraphQl.EfCore.Translate
 			throw new NotImplementedException($"Not implemented transformation for type '{memberType.Name}'");
 		}
 
-		static Expression OrderBy(Expression source, Type type, string orderByProperty, bool desc, bool isThenBy = false)
-		{
-			var command = isThenBy ? (desc ? nameof(Enumerable.ThenByDescending) : nameof(Enumerable.ThenBy)) : (desc ? nameof(Enumerable.OrderByDescending) : nameof(Enumerable.OrderBy));
-
-			ParameterExpression parameter = (ParameterExpression)(typeof(PropertyCache<>).MakeGenericType(type).GetField("SourceParameter").GetValue(null));
-			MemberExpression sourceMember = GetMemberFromProperty(type, orderByProperty);
-
-			return Expression.Call(
-				typeof(Enumerable),
-				command,
-				new Type[] { type, sourceMember.Type },
-				source,
-				Expression.Lambda(sourceMember, parameter)
-			);
-		}
-
-		static Expression OrderBy(Expression source, Type type, string sqlOrderByList)
-		{
-			var ordebyItems = sqlOrderByList.Trim().Split(',');
-			Expression result = source;
-			bool useThenBy = false;
-			foreach (var item in ordebyItems)
-			{
-				var splt = item.Trim().Split(' ');
-				result = OrderBy(result, type, splt[0].Trim(), (splt.Length > 1 && splt[1].Trim().ToLower() == "desc"), useThenBy);
-				useThenBy = true;
-			}
-			return result;
-		}
-
 		static Expression Take(Expression source, Type type, int count)
 		{
 			return Expression.Call(
@@ -278,9 +259,5 @@ namespace GraphQl.EfCore.Translate
 				Expression.Constant(count, typeof(int))
 			);
 		}
-
-		/*static MemberInfo GetPropertyOrField(Type type, string name) {
-			return type.GetProperty(name, bindingFlagsPublic) ?? (MemberInfo?)type.GetField(name, bindingFlagsPublic);
-		}*/
 	}
 }
