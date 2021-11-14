@@ -102,82 +102,21 @@ namespace GraphQl.EfCore.Translate
 			Expression targetValue = MakePredicateBody(targetElementType, sourceElementParam, childMembers, fields, depth + 1, memberNameFull);
 
 			var field = fields.FirstOrDefault(x => x.Path == memberNameFull);
-			Expression where = sourceMember;
+			Expression sourceExpression = sourceMember;
 
 			if (field != null)
 			{
-				try
-				{
-					if (field.Arguments.ContainsKey("where"))
-					{
-						var wh = field.Arguments["where"];
-						string jsonString = JsonSerializer.Serialize(wh);
-						var options = new JsonSerializerOptions();
-						options.Converters.Add(new JsonStringEnumConverter());
-						options.PropertyNameCaseInsensitive = true;
-						IEnumerable<WhereExpression> w = JsonSerializer.Deserialize<IEnumerable<WhereExpression>>(jsonString, options);
+				sourceExpression = Where(sourceExpression, sourceElementType, field);
 
-						var m = typeof(ExpressionBuilderWhere<>).MakeGenericType(sourceElementType).GetMethod("BuildPredicate", new Type[] { typeof(IEnumerable<WhereExpression>) });
-						Expression predicate = (Expression)m.Invoke(null, new[] { w });
+				sourceExpression = OrderBy(sourceExpression, sourceElementType, field);
 
-						where = Expression.Call(
-							typeof(Enumerable),
-							nameof(Enumerable.Where),
-							new Type[] { sourceElementType },
-							where,
-							predicate
-						);
-					}
+				sourceExpression = Skip(sourceExpression, sourceElementType, field);
 
-				}
-				catch
-				{
-					throw new($"Failed to execute Where on path \"{field.Path}\".");
-				}
-
-				try
-				{
-					if (field.Arguments.ContainsKey("orderby"))
-					{
-						var m = typeof(ExpressionBuilderOrderBy<>).MakeGenericType(sourceElementType).GetMethod("BuildPredicate", new Type[] { typeof(Expression), typeof(string) });
-						where = (Expression)m.Invoke(null, new object[] { where, field.Arguments["orderby"].ToString() });
-						// where = OrderBy(where, sourceElementType, field.Arguments["orderby"].ToString());
-					}
-
-				}
-				catch
-				{
-					throw new($"Failed to execute OrderBy on path \"{field.Path}\".");
-				}
-
-				try
-				{
-					if (field.Arguments.ContainsKey("skip"))
-					{
-						where = Skip(where, sourceElementType, int.Parse(field.Arguments["skip"].ToString()));
-					}
-
-				}
-				catch
-				{
-					throw new($"Failed to execute Skip on path \"{field.Path}\".");
-				}
-
-				try
-				{
-					if (field.Arguments.ContainsKey("take"))
-					{
-						where = Take(where, sourceElementType, int.Parse(field.Arguments["take"].ToString()));
-					}
-				}
-				catch
-				{
-					throw new($"Failed to execute Take on path \"{field.Path}\".");
-				}
+				sourceExpression = Take(sourceExpression, sourceElementType, field);
 			}
 
 			targetValue = Expression.Call(typeof(Enumerable), nameof(Enumerable.Select),
-				new[] { sourceElementType, targetElementType }, where,
+				new[] { sourceElementType, targetElementType }, sourceExpression,
 				Expression.Lambda(targetValue, sourceElementParam));
 
 			return CorrectEnumerableResult(targetValue, targetElementType, targetMember.Type);
@@ -238,26 +177,103 @@ namespace GraphQl.EfCore.Translate
 			throw new NotImplementedException($"Not implemented transformation for type '{memberType.Name}'");
 		}
 
-		static Expression Take(Expression source, Type type, int count)
+		static Expression Where(Expression source, Type type, NodeGraph field)
 		{
-			return Expression.Call(
-				typeof(Enumerable),
-				nameof(Enumerable.Take),
-				new Type[] { type },
-				source,
-				Expression.Constant(count, typeof(int))
-			);
+			try
+			{
+				if (field.Arguments.ContainsKey("where"))
+				{
+					var wh = field.Arguments["where"];
+					string jsonString = JsonSerializer.Serialize(wh);
+					var options = new JsonSerializerOptions();
+					options.Converters.Add(new JsonStringEnumConverter());
+					options.PropertyNameCaseInsensitive = true;
+					IEnumerable<WhereExpression> w = JsonSerializer.Deserialize<IEnumerable<WhereExpression>>(jsonString, options);
+
+					var m = typeof(ExpressionBuilderWhere<>).MakeGenericType(type).GetMethod("BuildPredicate", new Type[] { typeof(IEnumerable<WhereExpression>) });
+					Expression predicate = (Expression)m.Invoke(null, new[] { w });
+
+					return Expression.Call(
+						typeof(Enumerable),
+						nameof(Enumerable.Where),
+						new Type[] { type },
+						source,
+						predicate
+					);
+				}
+
+			}
+			catch
+			{
+				throw new($"Failed to execute Where on path \"{field.Path}\".");
+			}
+
+			return source;
 		}
 
-		static Expression Skip(Expression source, Type type, int count)
+		static Expression OrderBy(Expression source, Type type, NodeGraph field)
 		{
-			return Expression.Call(
-				typeof(Enumerable),
-				nameof(Enumerable.Skip),
-				new Type[] { type },
-				source,
-				Expression.Constant(count, typeof(int))
-			);
+			try
+			{
+				if (field.Arguments.ContainsKey("orderby"))
+				{
+					var m = typeof(ExpressionBuilderOrderBy<>).MakeGenericType(type).GetMethod("BuildPredicate", new Type[] { typeof(Expression), typeof(string) });
+					return (Expression)m.Invoke(null, new object[] { source, field.Arguments["orderby"].ToString() });
+					// where = OrderBy(where, sourceElementType, field.Arguments["orderby"].ToString());
+				}
+			}
+			catch
+			{
+				throw new($"Failed to execute OrderBy on path \"{field.Path}\".");
+			}
+
+			return source;
+		}
+
+		static Expression Take(Expression source, Type type, NodeGraph field)
+		{
+			try
+			{
+				if (field.Arguments.ContainsKey("take"))
+				{
+					return Expression.Call(
+						typeof(Enumerable),
+						nameof(Enumerable.Take),
+						new Type[] { type },
+						source,
+						Expression.Constant(int.Parse(field.Arguments["take"].ToString()), typeof(int))
+					);
+				}
+			}
+			catch
+			{
+				throw new($"Failed to execute Take on path \"{field.Path}\".");
+			}
+
+			return source;
+		}
+
+		static Expression Skip(Expression source, Type type, NodeGraph field)
+		{
+			try
+			{
+				if (field.Arguments.ContainsKey("skip"))
+				{
+					return Expression.Call(
+						typeof(Enumerable),
+						nameof(Enumerable.Skip),
+						new Type[] { type },
+						source,
+						Expression.Constant(int.Parse(field.Arguments["skip"].ToString()), typeof(int))
+					);
+				}
+			}
+			catch
+			{
+				throw new($"Failed to execute Skip on path \"{field.Path}\".");
+			}
+
+			return source;
 		}
 	}
 }
