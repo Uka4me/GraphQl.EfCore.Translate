@@ -27,13 +27,13 @@ namespace GraphQl.EfCore.Translate
 			return queryable.Where(predicate);
 		}
 
-		public static IQueryable<T> GraphQlPagination<T>(IQueryable<T> queryable, int skip = 0, int take = 0)
+		public static IQueryable<T> GraphQlPagination<T>(IQueryable<T> queryable, int skip = 0, int? take = null)
 		{
 			queryable = queryable.Skip(skip);
 
-			if (take > 0)
+			if (take is not null)
 			{
-				queryable = queryable.Take(take);
+				queryable = queryable.Take((int)take);
 			}
 
 			return queryable;

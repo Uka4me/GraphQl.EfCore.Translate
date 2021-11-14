@@ -46,16 +46,10 @@ namespace GraphQl.EfCore.Translate.HotChocolate
             var argumentSkip = GetNameArgument<int>(context, "skip", "Skip");
             if (argumentTake is not null || argumentSkip is not null)
             {
-                var take = argumentTake is not null ? context.ArgumentValue<int?>(argumentTake) ?? 0 : 0;
+                var take = argumentTake is not null ? context.ArgumentValue<int?>(argumentTake) : null;
                 var skip = argumentSkip is not null ? context.ArgumentValue<int?>(argumentSkip) ?? 0 : 0;
 
                 return EfCoreExtensions.GraphQlPagination(queryable, skip, take);
-                /*queryable = queryable.Skip(skip);
-
-                if (take > 0)
-                {
-                    queryable = queryable.Take(take);
-                }*/
             }
 
             return queryable;

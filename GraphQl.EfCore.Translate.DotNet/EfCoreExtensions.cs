@@ -48,8 +48,8 @@ namespace GraphQl.EfCore.Translate.DotNet
 			var argumentTake = GetNameArgument(context, "take", "Take");
 			var argumentSkip = GetNameArgument(context, "skip", "Skip");
 			if (argumentTake is not null || argumentSkip is not null) {
-				var take = context.GetArgument<int>(argumentTake, 0);
-				var skip = context.GetArgument<int>(argumentSkip, 0);
+				var take = argumentTake is not null ? context.GetArgument<int?>(argumentTake, null) : null;
+				var skip = argumentSkip is not null ? context.GetArgument<int>(argumentSkip, 0) : 0;
 
 				return EfCoreExtensions.GraphQlPagination(queryable, skip, take);
 			}
@@ -78,7 +78,7 @@ namespace GraphQl.EfCore.Translate.DotNet
 			EfCoreExtensions.AddCalculatedField<T>(path, func);
 		}
 
-		static string GetNameArgument(IResolveFieldContext<object> context, params string[] names) {
+		static string? GetNameArgument(IResolveFieldContext<object> context, params string[] names) {
 			return names.FirstOrDefault(name => context.HasArgument(name));
 		}
 
