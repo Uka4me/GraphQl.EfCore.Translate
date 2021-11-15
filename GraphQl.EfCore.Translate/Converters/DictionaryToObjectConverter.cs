@@ -64,9 +64,9 @@ namespace GraphQl.EfCore.Translate.Converters
                 }
 
                 // List<string> to List
-                if (typeof(IList).IsAssignableFrom(newT) && typeof(IList<string>).IsAssignableFrom(item.Value.GetType()))
+                if (typeof(IList<string>).IsAssignableFrom(newT) && (typeof(IList<string>).IsAssignableFrom(item.Value.GetType()) || typeof(IList<object>).IsAssignableFrom(item.Value.GetType())))
                 {
-                    t.GetType().GetProperty(property.Name).SetValue(t, item.Value, null);
+                    t.GetType().GetProperty(property.Name).SetValue(t, (item.Value as List<object>).Cast<string>().ToList(), null);
                     continue;
                 }
 
