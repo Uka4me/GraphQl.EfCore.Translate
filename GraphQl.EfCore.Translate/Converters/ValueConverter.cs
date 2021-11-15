@@ -7,7 +7,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GraphQl.EfCore.Translate
+namespace GraphQl.EfCore.Translate.Converters
 {
     static class ValueConverter
     {

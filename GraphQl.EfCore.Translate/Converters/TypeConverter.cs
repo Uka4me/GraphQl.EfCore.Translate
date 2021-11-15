@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace GraphQl.EfCore.Translate;
+namespace GraphQl.EfCore.Translate.Converters;
 static class TypeConverter
 {
     public static IList ConvertStringsToList(string?[] values, MemberInfo property)

@@ -1,4 +1,5 @@
-﻿using GraphQl.EfCore.Translate.Select.Graphs;
+﻿using GraphQl.EfCore.Translate.Converters;
+using GraphQl.EfCore.Translate.Select.Graphs;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -9,6 +10,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace GraphQl.EfCore.Translate
 {
@@ -184,10 +186,12 @@ namespace GraphQl.EfCore.Translate
 				if (field.Arguments.ContainsKey("where"))
 				{
 					var wh = field.Arguments["where"];
-					string jsonString = JsonSerializer.Serialize(wh);
 					var options = new JsonSerializerOptions();
-					options.Converters.Add(new JsonStringEnumConverter());
+					//options.Converters.Add(new JsonStringEnumConverter(new ConstantCaseNamingPolicy()));
+					options.Converters.Add(new JsonNullableStringEnumConverter());
 					options.PropertyNameCaseInsensitive = true;
+					options.WriteIndented = true;
+					string jsonString = JsonSerializer.Serialize(wh, options);
 					IEnumerable<WhereExpression> w = JsonSerializer.Deserialize<IEnumerable<WhereExpression>>(jsonString, options);
 
 					var m = typeof(ExpressionBuilderWhere<>).MakeGenericType(type).GetMethod("BuildPredicate", new Type[] { typeof(IEnumerable<WhereExpression>) });

@@ -1,10 +1,10 @@
-﻿using System;
+﻿using GraphQl.EfCore.Translate.Converters;
+using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace GraphQl.EfCore.Translate
 {
-
     public class WhereExpression
     {
         public string Path { get; set; } = string.Empty;

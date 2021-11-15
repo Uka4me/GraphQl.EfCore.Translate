@@ -7,7 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace GraphQl.EfCore.Translate
+namespace GraphQl.EfCore.Translate.Converters
 {
 	public class SingleOrArrayConverter<TItem> : SingleOrArrayConverter<List<TItem>, TItem>
 	{
