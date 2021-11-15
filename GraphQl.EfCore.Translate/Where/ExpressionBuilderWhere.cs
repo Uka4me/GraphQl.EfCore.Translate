@@ -39,7 +39,7 @@ namespace GraphQl.EfCore.Translate
                 Expression nextExpression;
 
                 // If there are grouped expressions
-                if (@where.GroupedExpressions?.Length > 0)
+                if (@where.GroupedExpressions?.Count > 0)
                 {
                     // Recurse with new set of expression
                     nextExpression = MakePredicateBody(where.GroupedExpressions);
