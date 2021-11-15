@@ -1,4 +1,5 @@
-﻿using GraphQl.EfCore.Translate.Select.Graphs;
+﻿using GraphQl.EfCore.Translate.Converters;
+using GraphQl.EfCore.Translate.Select.Graphs;
 using HotChocolate.Execution.Processing;
 using HotChocolate.Language;
 using HotChocolate.Resolvers;
@@ -158,6 +159,11 @@ namespace GraphQl.EfCore.Translate.HotChocolate
                             {
                                 var converter = new ObjectValueToDictionaryConverter();
                                 value = converter.Convert((ListValueNode)value);
+                            }
+
+                            if (name == "where")
+                            {
+                                value = Converters.DictionaryToObjectConverter.Convert<WhereExpression>(value as List<object>);
                             }
 
                             if (value != null)

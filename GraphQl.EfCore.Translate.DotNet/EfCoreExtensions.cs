@@ -1,4 +1,5 @@
-﻿using GraphQl.EfCore.Translate.Select.Graphs;
+﻿using GraphQl.EfCore.Translate.Converters;
+using GraphQl.EfCore.Translate.Select.Graphs;
 using GraphQL;
 using GraphQL.Language.AST;
 using System;
@@ -142,6 +143,10 @@ namespace GraphQl.EfCore.Translate.DotNet
 								value = context.Variables != null
 										? context.Variables.ValueFor(variable.Name)
 										: null;
+							}
+
+							if (name == "where") {
+								value = DictionaryToObjectConverter.Convert<WhereExpression>(value as List<object>);
 							}
 
 							if (value != null)

@@ -186,16 +186,16 @@ namespace GraphQl.EfCore.Translate
 				if (field.Arguments.ContainsKey("where"))
 				{
 					var wh = field.Arguments["where"];
-					var options = new JsonSerializerOptions();
+					/*var options = new JsonSerializerOptions();
 					//options.Converters.Add(new JsonStringEnumConverter(new ConstantCaseNamingPolicy()));
-					options.Converters.Add(new JsonNullableStringEnumConverter());
+					options.Converters.Add(new JsonNullableStringEnumConverter(new ConstantCaseNamingPolicy()));
 					options.PropertyNameCaseInsensitive = true;
 					options.WriteIndented = true;
 					string jsonString = JsonSerializer.Serialize(wh, options);
-					IEnumerable<WhereExpression> w = JsonSerializer.Deserialize<IEnumerable<WhereExpression>>(jsonString, options);
+					IEnumerable<WhereExpression> w = JsonSerializer.Deserialize<IEnumerable<WhereExpression>>(jsonString, options);*/
 
 					var m = typeof(ExpressionBuilderWhere<>).MakeGenericType(type).GetMethod("BuildPredicate", new Type[] { typeof(IEnumerable<WhereExpression>) });
-					Expression predicate = (Expression)m.Invoke(null, new[] { w });
+					Expression predicate = (Expression)m.Invoke(null, new[] { wh as List<WhereExpression> });
 
 					return Expression.Call(
 						typeof(Enumerable),
