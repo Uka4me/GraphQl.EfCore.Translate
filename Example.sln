@@ -11,11 +11,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GraphQL.DotNet", "GraphQL.D
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GraphQl.EfCore.Translate", "GraphQl.EfCore.Translate\GraphQl.EfCore.Translate.csproj", "{D55B3AD8-41C6-41BF-8861-371553663EC0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphQL.HotChocolate", "GraphQL.HotChocolate\GraphQL.HotChocolate.csproj", "{93448121-8FB9-4F84-A462-CDE8B2579B9A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GraphQL.HotChocolate", "GraphQL.HotChocolate\GraphQL.HotChocolate.csproj", "{93448121-8FB9-4F84-A462-CDE8B2579B9A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphQl.EfCore.Translate.HotChocolate", "GraphQl.EfCore.Translate.HotChocolate\GraphQl.EfCore.Translate.HotChocolate.csproj", "{5D138060-181D-4849-90B5-3544206A1CC7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GraphQl.EfCore.Translate.HotChocolate", "GraphQl.EfCore.Translate.HotChocolate\GraphQl.EfCore.Translate.HotChocolate.csproj", "{5D138060-181D-4849-90B5-3544206A1CC7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphQl.EfCore.Translate.DotNet", "GraphQl.EfCore.Translate.DotNet\GraphQl.EfCore.Translate.DotNet.csproj", "{83FF120B-A804-49EE-B73B-7D8B0AC93B79}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GraphQl.EfCore.Translate.DotNet", "GraphQl.EfCore.Translate.DotNet\GraphQl.EfCore.Translate.DotNet.csproj", "{83FF120B-A804-49EE-B73B-7D8B0AC93B79}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.Translate", "Tests.Translate\Tests.Translate.csproj", "{6B41CCA6-58AA-49C6-B76B-75DE940F9036}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,10 @@ Global
 		{83FF120B-A804-49EE-B73B-7D8B0AC93B79}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{83FF120B-A804-49EE-B73B-7D8B0AC93B79}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{83FF120B-A804-49EE-B73B-7D8B0AC93B79}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B41CCA6-58AA-49C6-B76B-75DE940F9036}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B41CCA6-58AA-49C6-B76B-75DE940F9036}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B41CCA6-58AA-49C6-B76B-75DE940F9036}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B41CCA6-58AA-49C6-B76B-75DE940F9036}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

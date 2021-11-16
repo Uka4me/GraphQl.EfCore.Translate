@@ -49,7 +49,10 @@ namespace GraphQl.EfCore.Translate.Converters
                 if (newT.IsEnum)
                 {
                     var names = Enum.GetNames(newT);
-                    var match = names.FirstOrDefault(e => string.Equals(StringUtils.ToConstantCase(e), item.Value.ToString(), StringComparison.OrdinalIgnoreCase));
+                    var match = names.FirstOrDefault(e => 
+                        string.Equals(StringUtils.ToConstantCase(e), item.Value.ToString(), StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(e, item.Value.ToString(), StringComparison.OrdinalIgnoreCase)
+                    );
                     
                     if ((!IsNullableType(tPropertyType) && match is not null) || IsNullableType(tPropertyType)) {
                         t.GetType().GetProperty(property.Name).SetValue(t, Enum.Parse(newT, match), null);
@@ -58,32 +61,68 @@ namespace GraphQl.EfCore.Translate.Converters
                 }
 
                 // String to List<String>
-                if (typeof(IList).IsAssignableFrom(newT) && item.Value is string) {
+                /*if (typeof(IList).IsAssignableFrom(newT) && item.Value is string) {
                     t.GetType().GetProperty(property.Name).SetValue(t, new List<string> { item.Value as string }, null);
                     continue;
-                }
+                }*/
 
-                // List<string> to List
-                if (typeof(IList<string>).IsAssignableFrom(newT) && (typeof(IList<string>).IsAssignableFrom(item.Value.GetType()) || typeof(IList<object>).IsAssignableFrom(item.Value.GetType())))
+                if (typeof(IList).IsAssignableFrom(newT) && !item.Value.GetType().IsGenericType)
                 {
-                    t.GetType().GetProperty(property.Name).SetValue(t, (item.Value as List<object>).Cast<string>().ToList(), null);
+                    Type childType = newT.GetGenericArguments().FirstOrDefault();
+
+                    if (childType.IsPrimitive || childType.IsAssignableFrom(typeof(string)))
+                    {
+                        var genericListType = typeof(List<>).MakeGenericType(childType);
+                        IList objs = Activator.CreateInstance(genericListType) as IList;
+
+                        objs.Add(System.Convert.ChangeType(item.Value, childType));
+
+                        t.GetType().GetProperty(property.Name).SetValue(t, objs, null);
+                        continue;
+                    }
+
+                    IList classes = Activator.CreateInstance(typeof(List<object>)) as IList;
+                    classes.Add(item.Value);
+
+                    t.GetType().GetProperty(property.Name).SetValue(t, Convert(classes as List<object>, childType), null);
                     continue;
+
+                    /*t.GetType().GetProperty(property.Name).SetValue(t, new List<string> { item.Value as string }, null);
+                    continue;*/
                 }
 
-                // List<object> to List or Array
+                // List<object> to List
                 if (typeof(IList).IsAssignableFrom(newT) && typeof(IList<object>).IsAssignableFrom(item.Value.GetType()))
                 {
                     Type childType = newT.GetGenericArguments().FirstOrDefault();
+                    
+                    if (childType.IsPrimitive || childType.IsAssignableFrom(typeof(string))) {
+                        var genericListType = typeof(List<>).MakeGenericType(childType);
+                        IList objs = Activator.CreateInstance(genericListType) as IList;
+
+                        foreach (var obj in item.Value as IList<object>)
+                        {
+                            objs.Add(System.Convert.ChangeType(obj, childType));
+                        }
+                        t.GetType().GetProperty(property.Name).SetValue(t, objs, null);
+                        continue;
+                    }
+
                     t.GetType().GetProperty(property.Name).SetValue(t, Convert(item.Value as List<object>, childType), null);
                     continue;
                 }
 
-                object newA = System.Convert.ChangeType(item.Value, newT);
-                t.GetType().GetProperty(property.Name).SetValue(t, newA, null);
+                t.GetType().GetProperty(property.Name).SetValue(t, System.Convert.ChangeType(item.Value, newT), null);
             }
             return t;
         }
 
+        public static bool IsNonStringClass(Type type)
+        {
+            if (type == null || type == typeof(string))
+                return false;
+            return type.IsClass;
+        }
         private static bool IsNullableType(Type t)
         {
             return (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>));

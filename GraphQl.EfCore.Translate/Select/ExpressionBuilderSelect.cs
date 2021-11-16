@@ -14,7 +14,7 @@ using System.Text.RegularExpressions;
 
 namespace GraphQl.EfCore.Translate
 {
-    static class ExpressionBuilderSelect<T>
+    public static class ExpressionBuilderSelect<T>
     {
 		public static ConcurrentDictionary<string, Func<Expression, Expression>> CalculatedFields = new();
 		const BindingFlags bindingFlagsPublic = BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.FlattenHierarchy;
