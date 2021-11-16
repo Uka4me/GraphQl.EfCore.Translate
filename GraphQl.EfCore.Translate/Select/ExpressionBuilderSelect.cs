@@ -55,10 +55,10 @@ namespace GraphQl.EfCore.Translate
                     typeSource is null ? source.Type : typeSource,
                     pathSource is null ? memberName : $"{pathSource}.{memberName}"
                 );
-				if (sourceMember is null)
-				{
-					continue;
-				}*/
+                if (sourceMember is null)
+                {
+                    continue;
+                }*/
                 var targetProperty = target?.Type.GetProperty(memberName, bindingFlagsPublic);
                 var sourceProperty = source?.Type.GetProperty(memberName, bindingFlagsPublic);
 
