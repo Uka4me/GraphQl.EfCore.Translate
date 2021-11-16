@@ -33,41 +33,44 @@ namespace GraphQl.EfCore.Translate
 
 		static Expression MakePredicateBody(Type targetType, Expression source, IEnumerable<string[]> memberPaths, List<NodeGraph> fields, int depth = 0, string? keys = null)
 		{
-			String pathSource = null;
-			Type typeSource = null;
-			if (source is MemberExpression)
-			{
-				pathSource = GetPathProperty((MemberExpression)source);
-				typeSource = GetTypeProperty((MemberExpression)source);
-			}
+            /*String pathSource = null;
+            Type typeSource = null;
+            if (source is MemberExpression)
+            {
+                pathSource = GetPathProperty((MemberExpression)source);
+                typeSource = GetTypeProperty((MemberExpression)source);
+            }*/
 
-			var bindings = new List<MemberBinding>();
+            var bindings = new List<MemberBinding>();
 			var target = Expression.Constant(null, targetType);
 			foreach (var memberGroup in memberPaths.GroupBy(path => path[depth]))
 			{
 				Expression targetValue = null;
 				String memberName = memberGroup.Key;
-				String memberNameFull = string.IsNullOrWhiteSpace(keys) ? memberName : $"{keys}.{memberName}";
-				var childMembers = memberGroup.Where(path => depth + 1 < path.Length).ToList();
+                String memberNameFull = string.IsNullOrWhiteSpace(keys) ? memberName : $"{keys}.{memberName}";
+                var childMembers = memberGroup.Where(path => depth + 1 < path.Length).ToList();
 
-				/*MemberExpression targetMember = GetMemberFromProperty(target.Type, memberName);
-				MemberExpression sourceMember = GetMemberFromProperty(
-					typeSource is null ? source.Type : typeSource,
-					pathSource is null ? memberName : $"{pathSource}.{memberName}"
-				);*/
-
-				var targetProperty = target?.Type.GetProperty(memberName, bindingFlagsPublic);
-				var sourceProperty = source?.Type.GetProperty(memberName, bindingFlagsPublic);
-
-				if (targetProperty is null || sourceProperty is null)
+                /*MemberExpression targetMember = GetMemberFromProperty(target.Type, memberName);
+                MemberExpression sourceMember = GetMemberFromProperty(
+                    typeSource is null ? source.Type : typeSource,
+                    pathSource is null ? memberName : $"{pathSource}.{memberName}"
+                );
+				if (sourceMember is null)
 				{
 					continue;
-				}
+				}*/
+                var targetProperty = target?.Type.GetProperty(memberName, bindingFlagsPublic);
+                var sourceProperty = source?.Type.GetProperty(memberName, bindingFlagsPublic);
 
-				MemberExpression targetMember = Expression.PropertyOrField(target, targetProperty.Name);
-				MemberExpression sourceMember = Expression.PropertyOrField(source, sourceProperty.Name);
+                if (targetProperty is null || sourceProperty is null)
+                {
+                    continue;
+                }
 
-				if (targetMember.Member.GetCustomAttribute(typeof(NotMappedAttribute)) is not null) {
+                MemberExpression targetMember = Expression.PropertyOrField(target, targetProperty.Name);
+                MemberExpression sourceMember = Expression.PropertyOrField(source, sourceProperty.Name);
+
+                if (targetMember.Member.GetCustomAttribute(typeof(NotMappedAttribute)) is not null) {
 					targetValue = MakeCalculated(source, memberName);
 				} else if (!childMembers.Any()) {
 					targetValue = sourceMember;
