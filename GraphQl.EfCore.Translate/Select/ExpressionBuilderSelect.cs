@@ -17,7 +17,8 @@ namespace GraphQl.EfCore.Translate
     static class ExpressionBuilderSelect<T>
     {
 		public static ConcurrentDictionary<string, Func<Expression, Expression>> CalculatedFields = new();
-		
+		const BindingFlags bindingFlagsPublic = BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.FlattenHierarchy;
+
 		public static Func<Expression, Expression> AddCalculatedField(string path, Func<Expression, Expression> func) {
 			return CalculatedFields.GetOrAdd(path, x => func);
 		}
@@ -54,12 +55,17 @@ namespace GraphQl.EfCore.Translate
 					typeSource is null ? source.Type : typeSource,
 					pathSource is null ? memberName : $"{pathSource}.{memberName}"
 				);*/
-				MemberExpression targetMember = Expression.PropertyOrField(target, memberName);
-				MemberExpression sourceMember = Expression.PropertyOrField(source, memberName);
 
-				if (sourceMember is null) {
+				var targetProperty = target?.Type.GetProperty(memberName, bindingFlagsPublic);
+				var sourceProperty = source?.Type.GetProperty(memberName, bindingFlagsPublic);
+
+				if (targetProperty is null || sourceProperty is null)
+				{
 					continue;
 				}
+
+				MemberExpression targetMember = Expression.PropertyOrField(target, targetProperty.Name);
+				MemberExpression sourceMember = Expression.PropertyOrField(source, sourceProperty.Name);
 
 				if (targetMember.Member.GetCustomAttribute(typeof(NotMappedAttribute)) is not null) {
 					targetValue = MakeCalculated(source, memberName);
