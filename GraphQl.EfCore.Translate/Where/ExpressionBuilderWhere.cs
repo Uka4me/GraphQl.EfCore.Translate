@@ -269,8 +269,21 @@ namespace GraphQl.EfCore.Translate
             // Otherwise
             else
             {
+                var left = property.Left;
+                var ignoreList = new List<StringComparison> {
+                    StringComparison.OrdinalIgnoreCase,
+                    StringComparison.InvariantCultureIgnoreCase,
+                    StringComparison.CurrentCultureIgnoreCase
+                };
+                if (ignoreList.Contains((StringComparison)comparison))
+                {
+                    values = Array.ConvertAll(values, d => d.ToLower());
+                    left = Expression.Call(left, typeof(string).GetMethod("ToLower", System.Type.EmptyTypes));
+                    //valueConstant = Expression.Call(valueConstant, typeof(string).GetMethod("ToLower", System.Type.EmptyTypes));
+                }
+
                 // String comparison with comparison type value
-                equalsBody = Expression.Call(null, ReflectionCache.StringEqualComparison, ExpressionCache.StringParam, property.Left, Expression.Constant(comparison));
+                equalsBody = Expression.Call(null, ReflectionCache.StringEqual, ExpressionCache.StringParam, left/*, Expression.Constant(comparison)*/);
             }
 
             // Make lambda for comparing each string value against property value
