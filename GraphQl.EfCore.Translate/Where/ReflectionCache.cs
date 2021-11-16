@@ -35,6 +35,8 @@ static class ReflectionCache
     public static MethodInfo StringStartsWith = typeof(string).GetMethod("StartsWith", new[] {typeof(string)})!;
     public static MethodInfo StringIndexOfComparison = typeof(string).GetMethod("IndexOf", new[] {typeof(string), typeof(StringComparison)})!;
     public static MethodInfo StringIndexOf = typeof(string).GetMethod("IndexOf", new[] {typeof(string)})!;
+    public static MethodInfo StringContainsComparison = typeof(string).GetMethod("Contains", new[] { typeof(string), typeof(StringComparison) })!;
+    public static MethodInfo StringContains = typeof(string).GetMethod("Contains", new[] { typeof(string) })!;
     public static MethodInfo StringEndsWithComparison = typeof(string).GetMethod("EndsWith", new[] {typeof(string), typeof(StringComparison)})!;
     public static MethodInfo StringEndsWith = typeof(string).GetMethod("EndsWith", new[] {typeof(string)})!;
 

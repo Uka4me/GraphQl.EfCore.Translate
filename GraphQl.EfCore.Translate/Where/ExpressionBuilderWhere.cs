@@ -287,7 +287,7 @@ namespace GraphQl.EfCore.Translate
         {
             var left = property.Left;
 
-            var valueConstant = Expression.Constant(value, typeof(string));
+            Expression valueConstant = Expression.Constant(value, typeof(string));
             var nullCheck = Expression.NotEqual(left, ExpressionCache.Null);
 
             if (stringComparison is null)
@@ -305,8 +305,8 @@ namespace GraphQl.EfCore.Translate
                         var endsWithExpression = Expression.Call(left, ReflectionCache.StringEndsWith, valueConstant);
                         return Expression.AndAlso(nullCheck, endsWithExpression);
                     case Comparison.Contains:
-                        var indexOfExpression = Expression.Call(left, ReflectionCache.StringIndexOf, valueConstant);
-                        var notEqualExpression = Expression.NotEqual(indexOfExpression, ExpressionCache.NegativeOne);
+                        var containsExpression = Expression.Call(left, ReflectionCache.StringContains, valueConstant);
+                        var notEqualExpression = Expression.NotEqual(containsExpression, ExpressionCache.NegativeOne);
                         return Expression.AndAlso(nullCheck, notEqualExpression);
                 }
             }
@@ -324,8 +324,12 @@ namespace GraphQl.EfCore.Translate
                         var endsWithExpression = Expression.Call(left, ReflectionCache.StringEndsWithComparison, valueConstant, comparisonConstant);
                         return Expression.AndAlso(nullCheck, endsWithExpression);
                     case Comparison.Contains:
-                        var indexOfExpression = Expression.Call(left, ReflectionCache.StringIndexOfComparison, valueConstant, comparisonConstant);
-                        var notEqualExpression = Expression.NotEqual(indexOfExpression, ExpressionCache.NegativeOne);
+                        if ((new List<StringComparison> { StringComparison.OrdinalIgnoreCase, StringComparison.InvariantCultureIgnoreCase, StringComparison.CurrentCultureIgnoreCase }).Contains((StringComparison)stringComparison)) {
+                            left = Expression.Call(left, typeof(string).GetMethod("ToLower", System.Type.EmptyTypes));
+                            valueConstant = Expression.Call(valueConstant, typeof(string).GetMethod("ToLower", System.Type.EmptyTypes));
+                        }
+                        var containsExpression = Expression.Call(left, ReflectionCache.StringContains, valueConstant);
+                        var notEqualExpression = Expression.NotEqual(containsExpression, ExpressionCache.False);
                         return Expression.AndAlso(nullCheck, notEqualExpression);
                 }
             }
