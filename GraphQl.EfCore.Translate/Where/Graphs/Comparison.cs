@@ -18,6 +18,7 @@
         StartsWith,
         EndsWith,
         Contains,
+        IndexOf,
         Like
     }
 }
