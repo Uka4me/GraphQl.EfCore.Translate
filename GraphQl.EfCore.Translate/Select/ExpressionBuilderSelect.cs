@@ -24,7 +24,8 @@ namespace GraphQl.EfCore.Translate
 
 		public static Expression<Func<T, T>> BuildPredicate(List<NodeGraph> fields)
         {
-			var param = PropertyCache<T>.SourceParameter;
+			//var param = PropertyCache<T>.SourceParameter;
+			var param = Expression.Parameter(typeof(T), "e");
 			var body = MakePredicateBody(typeof(T), param, fields.Select(x => x.Path).Select(m => m.Split('.')), fields);
 			return Expression.Lambda<Func<T, T>>(body, param);
 		}
@@ -48,11 +49,13 @@ namespace GraphQl.EfCore.Translate
 				String memberNameFull = string.IsNullOrWhiteSpace(keys) ? memberName : $"{keys}.{memberName}";
 				var childMembers = memberGroup.Where(path => depth + 1 < path.Length).ToList();
 
-				MemberExpression targetMember = GetMemberFromProperty(target.Type, memberName);
+				/*MemberExpression targetMember = GetMemberFromProperty(target.Type, memberName);
 				MemberExpression sourceMember = GetMemberFromProperty(
 					typeSource is null ? source.Type : typeSource,
 					pathSource is null ? memberName : $"{pathSource}.{memberName}"
-				);
+				);*/
+				MemberExpression targetMember = Expression.PropertyOrField(target, memberName);
+				MemberExpression sourceMember = Expression.PropertyOrField(source, memberName);
 
 				if (sourceMember is null) {
 					continue;
@@ -100,7 +103,8 @@ namespace GraphQl.EfCore.Translate
 
 		static Expression MakeCollection(Type targetElementType, Type sourceElementType, MemberExpression targetMember, MemberExpression sourceMember, List<string[]> childMembers, List<NodeGraph> fields, int depth, string memberNameFull)
 		{
-			var sourceElementParam = (ParameterExpression)(typeof(PropertyCache<>).MakeGenericType(sourceElementType).GetField("SourceParameter").GetValue(null));
+			//var sourceElementParam = (ParameterExpression)(typeof(PropertyCache<>).MakeGenericType(sourceElementType).GetField("SourceParameter").GetValue(null));
+			var sourceElementParam = Expression.Parameter(sourceElementType, "e");
 			Expression targetValue = MakePredicateBody(targetElementType, sourceElementParam, childMembers, fields, depth + 1, memberNameFull);
 
 			var field = fields.FirstOrDefault(x => x.Path == memberNameFull);
