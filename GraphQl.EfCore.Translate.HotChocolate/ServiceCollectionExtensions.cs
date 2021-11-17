@@ -6,7 +6,7 @@ namespace GraphQl.EfCore.Translate.HotChocolate
     {
         public static IServiceCollection AddEFCoreGraphQLHotChocolate(this IServiceCollection services)
         {
-            services.AddSingleton<StringComparisonGraph>();
+            services.AddSingleton<CaseStringGraph>();
             services.AddSingleton<WhereExpressionGraph>();
             services.AddSingleton<ComparisonGraph>();
             services.AddSingleton<ConnectorGraph>();

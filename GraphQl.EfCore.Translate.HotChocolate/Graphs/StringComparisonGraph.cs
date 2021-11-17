@@ -2,5 +2,5 @@
 
 namespace GraphQl.EfCore.Translate.HotChocolate
 {
-    public class StringComparisonGraph : EnumType<StringComparison> { }
+    public class CaseStringGraph : EnumType<CaseString> { }
 }

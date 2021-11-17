@@ -11,7 +11,7 @@ namespace GraphQl.EfCore.Translate.DotNet
             Field(x => x.Path, true);
             Field<ComparisonGraph>("Comparison", null, null, _ => _.Source!.Comparison);
             Field(x => x.Negate, true);
-            Field<StringComparisonGraph>("Case", null, null, _ => _.Source!.Case);
+            Field<CaseStringGraph>("Case", null, null, _ => _.Source!.Case);
             Field(x => x.Value, true);
             Field<ConnectorGraph>("Connector", null, null, _ => _.Source!.Connector);
             Field<ListGraphType<WhereExpressionGraph>>(

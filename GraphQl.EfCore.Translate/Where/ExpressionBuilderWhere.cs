@@ -92,7 +92,7 @@ namespace GraphQl.EfCore.Translate
         /// <summary>
         /// Create a single predicate for the single set of supplied conditional arguments
         /// </summary>
-        public static Expression<Func<T, bool>> BuildPredicate(string path, Comparison comparison, string?[]? values, StringComparison? stringComparison)
+        public static Expression<Func<T, bool>> BuildPredicate(string path, Comparison comparison, string?[]? values, CaseString? stringComparison)
         {
             return BuildPredicate(path, comparison, values, false, stringComparison);
         }
@@ -108,7 +108,7 @@ namespace GraphQl.EfCore.Translate
         /// <summary>
         /// Create a single predicate for the single set of supplied conditional arguments
         /// </summary>
-        public static Expression<Func<T, bool>> BuildPredicate(string path, Comparison comparison, string?[]? values, bool negate, StringComparison? stringComparison)
+        public static Expression<Func<T, bool>> BuildPredicate(string path, Comparison comparison, string?[]? values, bool negate, CaseString? stringComparison)
         {
             var expressionBody = MakePredicateBody(path, comparison, values, negate, stringComparison);
             var param = PropertyCache<T>.SourceParameter;
@@ -119,7 +119,7 @@ namespace GraphQl.EfCore.Translate
         /// <summary>
         /// Makes the predicate body from the single set of supplied conditional arguments
         /// </summary>
-        static Expression MakePredicateBody(string path, Comparison comparison, string?[]? values, bool negate = false, StringComparison? stringComparison = null)
+        static Expression MakePredicateBody(string path, Comparison comparison, string?[]? values, bool negate = false, CaseString? stringComparison = null)
         {
             Expression expressionBody;
 
@@ -153,7 +153,7 @@ namespace GraphQl.EfCore.Translate
         /// <summary>
         /// Process a list based item inside the property path
         /// </summary>
-        static Expression ProcessList(string path, Comparison comparison, string?[]? values, StringComparison? stringComparison = null)
+        static Expression ProcessList(string path, Comparison comparison, string?[]? values, CaseString? stringComparison = null)
         {
             // Get the path pertaining to individual list items
             var listPath = Regex.Match(path, LIST_PROPERTY_PATTERN).Groups[1].Value;
@@ -186,7 +186,7 @@ namespace GraphQl.EfCore.Translate
         /// <summary>
         /// Build an expression from provided where parameters
         /// </summary>
-        static Expression GetExpression(string path, Comparison comparison, string?[]? values, StringComparison? stringComparison = null)
+        static Expression GetExpression(string path, Comparison comparison, string?[]? values, CaseString? stringComparison = null)
         {
             var property = PropertyCache<T>.GetProperty(path);
             Expression expressionBody;
@@ -195,10 +195,6 @@ namespace GraphQl.EfCore.Translate
             {
                 switch (comparison)
                 {
-                    /*case Comparison.NotIn:
-                        WhereValidator.ValidateString(comparison, stringComparison);
-                        expressionBody = NegateExpression(MakeStringIn(values!, property, stringComparison));  // Ensure expression is negated
-                        break;*/
                     case Comparison.In:
                         WhereValidator.ValidateString(comparison, stringComparison);
                         expressionBody = MakeStringIn(values!, property, stringComparison);
@@ -215,10 +211,6 @@ namespace GraphQl.EfCore.Translate
             {
                 switch (comparison)
                 {
-                    /*case Comparison.NotIn:
-                        WhereValidator.ValidateObject(property.PropertyType, comparison, stringComparison);
-                        expressionBody = NegateExpression(MakeObjectIn(values!, property)); // Ensure expression is negated
-                        break;*/
                     case Comparison.In:
                         WhereValidator.ValidateObject(property.PropertyType, comparison, stringComparison);
                         expressionBody = MakeObjectIn(values!, property);
@@ -256,35 +248,17 @@ namespace GraphQl.EfCore.Translate
         /// <summary>
         /// Make String List In Comparison
         /// </summary>
-        static Expression MakeStringIn(string[] values, Property<T> property, StringComparison? comparison)
+        static Expression MakeStringIn(string[] values, Property<T> property, CaseString? comparison)
         {
             MethodCallExpression equalsBody;
-
-            // If string comparison not provided
-            if (comparison is null)
+            var left = property.Left;
+            if (values is not null && comparison is not null && CaseString.Ignore == (CaseString)comparison)
             {
-                // Do basic string compare
-                equalsBody = Expression.Call(null, ReflectionCache.StringEqual, ExpressionCache.StringParam, property.Left);
+                values = Array.ConvertAll(values, d => d.ToLower());
+                left = Expression.Call(left, typeof(string).GetMethod("ToLower", System.Type.EmptyTypes));
             }
-            // Otherwise
-            else
-            {
-                var left = property.Left;
-                var ignoreList = new List<StringComparison> {
-                    StringComparison.OrdinalIgnoreCase,
-                    StringComparison.InvariantCultureIgnoreCase,
-                    StringComparison.CurrentCultureIgnoreCase
-                };
-                if (ignoreList.Contains((StringComparison)comparison))
-                {
-                    values = Array.ConvertAll(values, d => d.ToLower());
-                    left = Expression.Call(left, typeof(string).GetMethod("ToLower", System.Type.EmptyTypes));
-                    //valueConstant = Expression.Call(valueConstant, typeof(string).GetMethod("ToLower", System.Type.EmptyTypes));
-                }
 
-                // String comparison with comparison type value
-                equalsBody = Expression.Call(null, ReflectionCache.StringEqual, ExpressionCache.StringParam, left/*, Expression.Constant(comparison)*/);
-            }
+            equalsBody = Expression.Call(null, ReflectionCache.StringEqual, ExpressionCache.StringParam, left);
 
             // Make lambda for comparing each string value against property value
             var itemEvaluate = Expression.Lambda<Func<string, bool>>(equalsBody, ExpressionCache.StringParam);
@@ -296,68 +270,42 @@ namespace GraphQl.EfCore.Translate
         /// <summary>
         /// Make String based single value comparisons
         /// </summary>
-        static Expression MakeStringComparison(Comparison comparison, string? value, Property<T> property, StringComparison? stringComparison)
+        static Expression MakeStringComparison(Comparison comparison, string? value, Property<T> property, CaseString? stringComparison)
         {
             var left = property.Left;
 
             Expression valueConstant = Expression.Constant(value, typeof(string));
             var nullCheck = Expression.NotEqual(left, ExpressionCache.Null);
 
-            if (stringComparison is null)
+            if (value is not null && stringComparison is not null && CaseString.Ignore == (CaseString)stringComparison)
             {
-                switch (comparison)
-                {
-                    case Comparison.Equal:
-                        return Expression.Call(ReflectionCache.StringEqual, left, valueConstant);
-                    case Comparison.Like:
-                        return Expression.Call(null, ReflectionCache.StringLike, ExpressionCache.EfFunction, left, valueConstant);
-                    case Comparison.StartsWith:
-                        var startsWithExpression = Expression.Call(left, ReflectionCache.StringStartsWith, valueConstant);
-                        return Expression.AndAlso(nullCheck, startsWithExpression);
-                    case Comparison.EndsWith:
-                        var endsWithExpression = Expression.Call(left, ReflectionCache.StringEndsWith, valueConstant);
-                        return Expression.AndAlso(nullCheck, endsWithExpression);
-                    case Comparison.Contains:
-                        var containsExpression = Expression.Call(left, ReflectionCache.StringContains, valueConstant);
-                        var notEqualExpression = Expression.NotEqual(containsExpression, ExpressionCache.False);
-                        return Expression.AndAlso(nullCheck, notEqualExpression);
-                    case Comparison.IndexOf:
-                        var indexOfExpression = Expression.Call(left, ReflectionCache.StringIndexOf, valueConstant);
-                        var indexOfNotEqualExpression = Expression.NotEqual(indexOfExpression, ExpressionCache.NegativeOne);
-                        return Expression.AndAlso(nullCheck, indexOfNotEqualExpression);
-                }
+                left = Expression.Call(left, typeof(string).GetMethod("ToLower", System.Type.EmptyTypes));
+                valueConstant = Expression.Call(valueConstant, typeof(string).GetMethod("ToLower", System.Type.EmptyTypes));
             }
-            else
+
+            switch (comparison)
             {
-                var comparisonConstant = Expression.Constant(stringComparison, typeof(StringComparison));
-                switch (comparison)
-                {
-                    case Comparison.Equal:
-                        return Expression.Call(ReflectionCache.StringEqualComparison, left, valueConstant, comparisonConstant);
-                    case Comparison.StartsWith:
-                        var startsWithExpression = Expression.Call(left, ReflectionCache.StringStartsWithComparison, valueConstant, comparisonConstant);
-                        return Expression.AndAlso(nullCheck, startsWithExpression);
-                    case Comparison.EndsWith:
-                        var endsWithExpression = Expression.Call(left, ReflectionCache.StringEndsWithComparison, valueConstant, comparisonConstant);
-                        return Expression.AndAlso(nullCheck, endsWithExpression);
-                    case Comparison.Contains:
-                        var ignoreList = new List<StringComparison> { 
-                            StringComparison.OrdinalIgnoreCase, 
-                            StringComparison.InvariantCultureIgnoreCase, 
-                            StringComparison.CurrentCultureIgnoreCase 
-                        };
-                        if (ignoreList.Contains((StringComparison)stringComparison)) {
-                            left = Expression.Call(left, typeof(string).GetMethod("ToLower", System.Type.EmptyTypes));
-                            valueConstant = Expression.Call(valueConstant, typeof(string).GetMethod("ToLower", System.Type.EmptyTypes));
-                        }
-                        var containsExpression = Expression.Call(left, ReflectionCache.StringContains, valueConstant);
-                        var notEqualExpression = Expression.NotEqual(containsExpression, ExpressionCache.False);
-                        return Expression.AndAlso(nullCheck, notEqualExpression);
-                    case Comparison.IndexOf:
-                        var indexOfExpression = Expression.Call(left, ReflectionCache.StringIndexOfComparison, valueConstant, comparisonConstant);
-                        var indexOfNotEqualExpression = Expression.NotEqual(indexOfExpression, ExpressionCache.NegativeOne);
-                        return Expression.AndAlso(nullCheck, indexOfNotEqualExpression);
-                }
+                case Comparison.Equal:
+                    var equalExpression = Expression.Call(ReflectionCache.StringEqual, left, valueConstant);
+                    return value is null ?
+                        equalExpression
+                        :
+                        Expression.AndAlso(nullCheck, equalExpression);
+                //return Expression.Call(ReflectionCache.StringEqual, left, valueConstant);
+                case Comparison.StartsWith:
+                    var startsWithExpression = Expression.Call(left, ReflectionCache.StringStartsWith, valueConstant);
+                    return Expression.AndAlso(nullCheck, startsWithExpression);
+                case Comparison.EndsWith:
+                    var endsWithExpression = Expression.Call(left, ReflectionCache.StringEndsWith, valueConstant);
+                    return Expression.AndAlso(nullCheck, endsWithExpression);
+                case Comparison.Contains:
+                    var containsExpression = Expression.Call(left, ReflectionCache.StringContains, valueConstant);
+                    var notEqualExpression = Expression.NotEqual(containsExpression, ExpressionCache.False);
+                    return Expression.AndAlso(nullCheck, notEqualExpression);
+                case Comparison.IndexOf:
+                    var indexOfExpression = Expression.Call(left, ReflectionCache.StringIndexOf, valueConstant);
+                    var indexOfNotEqualExpression = Expression.NotEqual(indexOfExpression, ExpressionCache.NegativeOne);
+                    return Expression.AndAlso(nullCheck, indexOfNotEqualExpression);
             }
 
             throw new($"Invalid comparison operator '{comparison}'.");

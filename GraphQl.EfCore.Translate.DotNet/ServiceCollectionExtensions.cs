@@ -6,7 +6,7 @@ namespace GraphQl.EfCore.Translate.DotNet
     {
         public static IServiceCollection AddEFCoreGraphQLDotNet(this IServiceCollection services)
         {
-            services.AddSingleton<StringComparisonGraph>();
+            services.AddSingleton<CaseStringGraph>();
             services.AddSingleton<WhereExpressionGraph>();
             services.AddSingleton<ComparisonGraph>();
             services.AddSingleton<ConnectorGraph>();

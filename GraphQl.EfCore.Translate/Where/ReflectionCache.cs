@@ -29,15 +29,10 @@ static class ReflectionCache
     static MethodInfo dateTimeOffsetListContains;
     static MethodInfo dateTimeOffsetNullableListContains;
     public static MethodInfo StringLike = typeof(DbFunctionsExtensions).GetMethod("Like", new[] {typeof(DbFunctions), typeof(string), typeof(string)})!;
-    public static MethodInfo StringEqualComparison = typeof(string).GetMethod("Equals", new[] {typeof(string), typeof(string), typeof(StringComparison)})!;
     public static MethodInfo StringEqual = typeof(string).GetMethod("Equals", new[] {typeof(string), typeof(string)})!;
-    public static MethodInfo StringStartsWithComparison = typeof(string).GetMethod("StartsWith", new[] {typeof(string), typeof(StringComparison)})!;
     public static MethodInfo StringStartsWith = typeof(string).GetMethod("StartsWith", new[] {typeof(string)})!;
-    public static MethodInfo StringIndexOfComparison = typeof(string).GetMethod("IndexOf", new[] {typeof(string), typeof(StringComparison)})!;
     public static MethodInfo StringIndexOf = typeof(string).GetMethod("IndexOf", new[] {typeof(string)})!;
-    public static MethodInfo StringContainsComparison = typeof(string).GetMethod("Contains", new[] { typeof(string), typeof(StringComparison) })!;
     public static MethodInfo StringContains = typeof(string).GetMethod("Contains", new[] { typeof(string) })!;
-    public static MethodInfo StringEndsWithComparison = typeof(string).GetMethod("EndsWith", new[] {typeof(string), typeof(StringComparison)})!;
     public static MethodInfo StringEndsWith = typeof(string).GetMethod("EndsWith", new[] {typeof(string)})!;
 
     static ReflectionCache()

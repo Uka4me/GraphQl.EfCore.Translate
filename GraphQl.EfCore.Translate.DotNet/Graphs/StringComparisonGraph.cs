@@ -4,7 +4,7 @@ using System;
 
 namespace GraphQl.EfCore.Translate.DotNet
 {
-    public class StringComparisonGraph : EnumerationGraphType<StringComparison> //<StringComparison>
+    public class CaseStringGraph : EnumerationGraphType<CaseString> //<StringComparison>
     {
         /*public StringComparisonGraph()
         {

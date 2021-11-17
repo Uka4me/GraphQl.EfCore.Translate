@@ -3,7 +3,7 @@ using System;
 
 static class WhereValidator
 {
-    public static void ValidateObject(Type propertyType, Comparison comparison, StringComparison? @case)
+    public static void ValidateObject(Type propertyType, Comparison comparison, CaseString? @case)
     {
         if (comparison == Comparison.Contains ||
             comparison == Comparison.StartsWith ||
@@ -15,11 +15,11 @@ static class WhereValidator
 
         if (@case is not null)
         {
-            throw new($"Cannot use {nameof(StringComparison)} when comparing {propertyType.FullName}.");
+            throw new($"Cannot use {nameof(CaseString)} when comparing {propertyType.FullName}.");
         }
     }
 
-    public static void ValidateSingleObject(Type propertyType, Comparison comparison, StringComparison? @case)
+    public static void ValidateSingleObject(Type propertyType, Comparison comparison, CaseString? @case)
     {
         ValidateObject(propertyType, comparison, @case);
         if (comparison == Comparison.In)
@@ -28,7 +28,7 @@ static class WhereValidator
         }
     }
 
-    public static void ValidateString(Comparison comparison, StringComparison? @case)
+    public static void ValidateString(Comparison comparison, CaseString? @case)
     {
         if (comparison == Comparison.GreaterThan ||
             comparison == Comparison.GreaterThanOrEqual ||
@@ -40,11 +40,11 @@ static class WhereValidator
 
         if (comparison == Comparison.Like && @case is not null)
         {
-            throw new($"{nameof(Comparison.Like)} is not compatible with {nameof(StringComparison)}.");
+            throw new($"{nameof(Comparison.Like)} is not compatible with {nameof(CaseString)}.");
         }
     }
 
-    public static void ValidateSingleString(Comparison comparison, StringComparison? @case)
+    public static void ValidateSingleString(Comparison comparison, CaseString? @case)
     {
         ValidateString(comparison, @case);
         if (comparison == Comparison.In)

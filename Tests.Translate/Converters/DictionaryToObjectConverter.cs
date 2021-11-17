@@ -17,7 +17,7 @@ namespace Tests.Translate.Converters
                 new Dictionary<string, object>{
                     { "Path", "Title"},
                     { "Negate", "true"},
-                    { "Case", "ORDINAL_IGNORE_CASE"},
+                    { "Case", "IGNORE"},
                     { "Comparison", "LESS_THAN_OR_EQUAL"},
                     { "Connector", "AND"},
                     { "Value", new List<object>{ "1", "2", "3" } },
@@ -25,7 +25,7 @@ namespace Tests.Translate.Converters
                                                 new Dictionary<string, object>{
                                                     { "Path", "Title"},
                                                     { "Negate", "false"},
-                                                    { "Case", "ORDINAL"},
+                                                    { "Case", "ORIGINAL"},
                                                     { "Comparison", "CONTAINS"},
                                                     { "Connector", "OR"},
                                                     { "Value", "1" },
@@ -33,7 +33,7 @@ namespace Tests.Translate.Converters
                                                                                 new Dictionary<string, object>{
                                                                                     { "Path", "Title"},
                                                                                     { "Negate", "true"},
-                                                                                    { "Case", "ORDINAL_IGNORE_CASE"},
+                                                                                    { "Case", "IGNORE"},
                                                                                     { "Comparison", "lessThan"},
                                                                                     { "Connector", "AND"},
                                                                                     { "Value", 2 }
@@ -74,7 +74,7 @@ namespace Tests.Translate.Converters
                 new WhereExpression{
                     Path = "Title",
                     Negate = true,
-                    Case = StringComparison.OrdinalIgnoreCase,
+                    Case = CaseString.Ignore,
                     Comparison = Comparison.LessThanOrEqual,
                     Connector = Connector.And,
                     Value = new List<string> { "1", "2", "3" },
@@ -82,7 +82,7 @@ namespace Tests.Translate.Converters
                                             new WhereExpression{
                                                 Path = "Title",
                                                 Negate = false,
-                                                Case = StringComparison.Ordinal,
+                                                Case = CaseString.Original,
                                                 Comparison = Comparison.Contains,
                                                 Connector = Connector.Or,
                                                 Value = new List<string> { "1" },
@@ -90,7 +90,7 @@ namespace Tests.Translate.Converters
                                                     new WhereExpression{
                                                         Path = "Title",
                                                         Negate = true,
-                                                        Case = StringComparison.OrdinalIgnoreCase,
+                                                        Case = CaseString.Ignore,
                                                         Comparison = Comparison.LessThan,
                                                         Connector = Connector.And,
                                                         Value = new List<string> { "2" }
