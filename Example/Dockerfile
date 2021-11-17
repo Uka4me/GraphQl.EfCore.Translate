@@ -7,9 +7,12 @@ EXPOSE 80
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 COPY ["Example/Example.csproj", "Example/"]
-COPY ["GraphQL.DotNet/GraphQL.DotNet.csproj", "GraphQL.DotNet/"]
+COPY ["GraphQL.HotChocolate/GraphQL.HotChocolate.csproj", "GraphQL.HotChocolate/"]
 COPY ["GraphQl.EfCore.Translate/GraphQl.EfCore.Translate.csproj", "GraphQl.EfCore.Translate/"]
+COPY ["GraphQl.EfCore.Translate.HotChocolate/GraphQl.EfCore.Translate.HotChocolate.csproj", "GraphQl.EfCore.Translate.HotChocolate/"]
 COPY ["Entity/Entity.csproj", "Entity/"]
+COPY ["GraphQL.DotNet/GraphQL.DotNet.csproj", "GraphQL.DotNet/"]
+COPY ["GraphQl.EfCore.Translate.DotNet/GraphQl.EfCore.Translate.DotNet.csproj", "GraphQl.EfCore.Translate.DotNet/"]
 RUN dotnet restore "Example/Example.csproj"
 COPY . .
 WORKDIR "/src/Example"
