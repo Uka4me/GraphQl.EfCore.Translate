@@ -10,6 +10,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Tests.Translate.HotChocolate.Entity;
+using Tests.Translate.HotChocolate.Types;
 
 namespace Tests.Translate.HotChocolate
 {
@@ -135,44 +137,6 @@ namespace Tests.Translate.HotChocolate
                     }
                 }
             };
-        }
-
-        public class CompanyObject : ObjectType<Company>
-        {
-            protected override void Configure(IObjectTypeDescriptor<Company> descriptor)
-            {
-                descriptor.Field(t => t.Name).Type<StringType>();
-                descriptor.Field(t => t.Employees).Type<ListType<PersonObject>>()
-                    .Argument("take", a => a.Type<IntType>())
-                    .Argument("skip", a => a.Type<IntType>())
-                    .Argument("orderBy", a => a.Type<StringType>())
-                    .Argument("where", a => a.Type<ListType<WhereExpressionGraph>>());
-            }
-        }
-
-        public class PersonObject : ObjectType<Person>
-        {
-            protected override void Configure(IObjectTypeDescriptor<Person> descriptor)
-            {
-                descriptor.Field(t => t.Name).Type<StringType>();
-                descriptor.Field(t => t.Age).Type<IntType>();
-                descriptor.Field(t => t.DateOfBirth).Type<DateTimeType>();
-                descriptor.Field(t => t.Company).Type<CompanyObject>();
-            }
-        }
-
-        public class Company
-        {
-            public string? Name { get; set; }
-            public IList<Person> Employees { get; set; } = null!;
-        }
-
-        public class Person
-        {
-            public string? Name { get; set; }
-            public int Age { get; set; }
-            public Company? Company { get; set; }
-            public DateTime DateOfBirth { get; set; }
         }
     }
 }
