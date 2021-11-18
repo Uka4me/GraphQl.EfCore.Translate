@@ -7,8 +7,8 @@ static class WhereValidator
     {
         if (comparison == Comparison.Contains ||
             comparison == Comparison.StartsWith ||
-            comparison == Comparison.EndsWith ||
-            comparison == Comparison.Like)
+            comparison == Comparison.EndsWith/* ||
+            comparison == Comparison.Like*/)
         {
             throw new($"Cannot perform {comparison} on {propertyType.FullName}.");
         }
@@ -38,10 +38,10 @@ static class WhereValidator
             throw new($"Cannot perform {comparison} on a String.");
         }
 
-        if (comparison == Comparison.Like && @case is not null)
+        /*if (comparison == Comparison.Like && @case is not null)
         {
             throw new($"{nameof(Comparison.Like)} is not compatible with {nameof(CaseString)}.");
-        }
+        }*/
     }
 
     public static void ValidateSingleString(Comparison comparison, CaseString? @case)

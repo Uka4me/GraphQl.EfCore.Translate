@@ -1,5 +1,6 @@
 ﻿using GraphQl.EfCore.Translate.Converters;
 using GraphQl.EfCore.Translate.Select.Graphs;
+using GraphQl.EfCore.Translate.Where.Graphs;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -196,19 +197,10 @@ namespace GraphQl.EfCore.Translate
 		{
 			try
 			{
-				if (field.Arguments.ContainsKey("where"))
+				if (field.Arguments.Where is not null)
 				{
-					var wh = field.Arguments["where"];
-					/*var options = new JsonSerializerOptions();
-					//options.Converters.Add(new JsonStringEnumConverter(new ConstantCaseNamingPolicy()));
-					options.Converters.Add(new JsonNullableStringEnumConverter(new ConstantCaseNamingPolicy()));
-					options.PropertyNameCaseInsensitive = true;
-					options.WriteIndented = true;
-					string jsonString = JsonSerializer.Serialize(wh, options);
-					IEnumerable<WhereExpression> w = JsonSerializer.Deserialize<IEnumerable<WhereExpression>>(jsonString, options);*/
-
 					var m = typeof(ExpressionBuilderWhere<>).MakeGenericType(type).GetMethod("BuildPredicate", new Type[] { typeof(IEnumerable<WhereExpression>) });
-					Expression predicate = (Expression)m.Invoke(null, new[] { wh as List<WhereExpression> });
+					Expression predicate = (Expression)m.Invoke(null, new[] { (List<WhereExpression>)field.Arguments.Where });
 
 					return Expression.Call(
 						typeof(Enumerable),
@@ -232,10 +224,10 @@ namespace GraphQl.EfCore.Translate
 		{
 			try
 			{
-				if (field.Arguments.ContainsKey("orderby"))
+				if (field.Arguments.OrderBy is not null)
 				{
 					var m = typeof(ExpressionBuilderOrderBy<>).MakeGenericType(type).GetMethod("BuildPredicate", new Type[] { typeof(Expression), typeof(string) });
-					return (Expression)m.Invoke(null, new object[] { source, field.Arguments["orderby"].ToString() });
+					return (Expression)m.Invoke(null, new object[] { source, field.Arguments.OrderBy });
 					// where = OrderBy(where, sourceElementType, field.Arguments["orderby"].ToString());
 				}
 			}
@@ -251,14 +243,14 @@ namespace GraphQl.EfCore.Translate
 		{
 			try
 			{
-				if (field.Arguments.ContainsKey("take"))
+				if (field.Arguments.Take is not null)
 				{
 					return Expression.Call(
 						typeof(Enumerable),
 						nameof(Enumerable.Take),
 						new Type[] { type },
 						source,
-						Expression.Constant(int.Parse(field.Arguments["take"].ToString()), typeof(int))
+						Expression.Constant(field.Arguments.Take, typeof(int))
 					);
 				}
 			}
@@ -274,14 +266,14 @@ namespace GraphQl.EfCore.Translate
 		{
 			try
 			{
-				if (field.Arguments.ContainsKey("skip"))
+				if (field.Arguments.Skip is not null)
 				{
 					return Expression.Call(
 						typeof(Enumerable),
 						nameof(Enumerable.Skip),
 						new Type[] { type },
 						source,
-						Expression.Constant(int.Parse(field.Arguments["skip"].ToString()), typeof(int))
+						Expression.Constant(field.Arguments.Skip, typeof(int))
 					);
 				}
 			}

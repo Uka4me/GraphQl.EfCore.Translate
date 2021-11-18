@@ -1,5 +1,6 @@
 ﻿using GraphQl.EfCore.Translate.Converters;
 using GraphQl.EfCore.Translate.Select.Graphs;
+using GraphQl.EfCore.Translate.Where.Graphs;
 using GraphQL;
 using GraphQL.Language.AST;
 using System;
@@ -127,14 +128,16 @@ namespace GraphQl.EfCore.Translate.DotNet
 						}
 
 						string[] keysArgs = new string[] { "where", "take", "skip", "orderby" };
-						Dictionary<string, object> args = new Dictionary<string, object>();
-						foreach (var arg in f.Arguments ?? new Arguments())
+						//Dictionary<string, object> args = new Dictionary<string, object>();
+						var args = new ArgumentNodeGraph();
+						var arguments = (f.Arguments ?? new Arguments()).ToList();
+						foreach (var arg in arguments.Where(x => keysArgs.Contains(x.Name.ToLower())))
 						{
 							var name = arg.Name.ToLower();
-							if (!keysArgs.Contains(name.ToLower()))
+							/*if (!keysArgs.Contains(name.ToLower()))
 							{
 								continue;
-							}
+							}*/
 
 							var value = arg.Value.Value;
 							var variable = arg.Value as VariableReference;
@@ -145,14 +148,27 @@ namespace GraphQl.EfCore.Translate.DotNet
 										: null;
 							}
 
+							if (name == "skip")
+							{
+								args.Skip = (int?)value;
+							}
+							if (name == "take")
+							{
+								args.Take = (int?)value;
+							}
+							if (name == "orderby")
+							{
+								args.OrderBy = value?.ToString();
+							}
 							if (name == "where") {
-								value = DictionaryToObjectConverter.Convert<WhereExpression>(value as List<object>);
+								value = DictionaryToObjectConverter.Convert<WhereExpression>(value);
+								args.Where = value is null ? null : (List<WhereExpression>)value;
 							}
 
-							if (value != null)
+							/*if (value != null)
 							{
 								args.Add(name, value);
-							}
+							}*/
 						}
 
 						list.Add(new NodeGraph

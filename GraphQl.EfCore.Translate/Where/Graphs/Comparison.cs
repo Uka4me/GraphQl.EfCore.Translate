@@ -18,7 +18,7 @@
         StartsWith,
         EndsWith,
         Contains,
-        IndexOf,
-        Like
+        IndexOf/*,
+        Like*/
     }
 }

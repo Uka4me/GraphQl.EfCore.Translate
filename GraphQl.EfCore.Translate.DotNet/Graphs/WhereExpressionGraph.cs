@@ -1,4 +1,5 @@
-﻿using GraphQL.Types;
+﻿using GraphQl.EfCore.Translate.Where.Graphs;
+using GraphQL.Types;
 
 namespace GraphQl.EfCore.Translate.DotNet
 {

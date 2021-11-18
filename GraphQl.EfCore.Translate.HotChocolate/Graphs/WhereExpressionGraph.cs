@@ -1,4 +1,5 @@
 ﻿
+using GraphQl.EfCore.Translate.Where.Graphs;
 using HotChocolate.Types;
 
 namespace GraphQl.EfCore.Translate.HotChocolate

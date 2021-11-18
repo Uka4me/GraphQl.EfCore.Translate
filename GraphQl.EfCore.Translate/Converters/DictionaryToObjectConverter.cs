@@ -13,16 +13,24 @@ namespace GraphQl.EfCore.Translate.Converters
 {
     public static class DictionaryToObjectConverter
     {
-        public static List<T> Convert<T>(List<object> list) where T : new() => (List<T>)Convert(list, typeof(T));
+        public static List<T> Convert<T>(object obj) where T : new() {
+            if (typeof(IList).IsAssignableFrom(obj.GetType()))
+            {
+                return (List<T>)Convert((IList)obj, typeof(T));
+            }
 
-        static IList Convert(List<object> list, Type type)
+            return (List<T>)Convert(new List<object> { obj }, typeof(T));
+        }
+        public static List<T> Convert<T>(IList list) where T : new() => (List<T>)Convert(list, typeof(T));
+
+        static IList Convert(IList list, Type type)
         {
             var genericListType = typeof(List<>).MakeGenericType(type);
             IList objs = Activator.CreateInstance(genericListType) as IList;
 
             foreach (var dict in list)
             {
-                objs.Add(Convert(dict as IDictionary<string, object>, type));
+                objs.Add(dict.GetType() == type ? dict : Convert(dict as IDictionary<string, object>, type));
             }
             return objs;
         }
@@ -68,7 +76,9 @@ namespace GraphQl.EfCore.Translate.Converters
 
                 if (typeof(IList).IsAssignableFrom(newT) && !item.Value.GetType().IsGenericType)
                 {
-                    Type childType = newT.GetGenericArguments().FirstOrDefault();
+                    Type childType = IsCollectionType(newT.BaseType) ?
+                        newT.BaseType.GetGenericArguments().FirstOrDefault() :
+                        newT.GetGenericArguments().FirstOrDefault();
 
                     if (childType.IsPrimitive || childType.IsAssignableFrom(typeof(string)))
                     {
@@ -77,38 +87,45 @@ namespace GraphQl.EfCore.Translate.Converters
 
                         objs.Add(System.Convert.ChangeType(item.Value, childType));
 
-                        t.GetType().GetProperty(property.Name).SetValue(t, objs, null);
+                        var listPrimitive = ConvertCollectionToType(newT, objs);
+                        t.GetType().GetProperty(property.Name).SetValue(t, listPrimitive, null);
                         continue;
                     }
 
-                    IList classes = Activator.CreateInstance(typeof(List<object>)) as IList;
-                    classes.Add(item.Value);
+                    IList listObjects = Activator.CreateInstance(typeof(List<object>)) as IList;
+                    listObjects.Add(item.Value);
 
-                    t.GetType().GetProperty(property.Name).SetValue(t, Convert(classes as List<object>, childType), null);
+                    var listObjectsTransform = ConvertCollectionToType(newT, listObjects);
+                    t.GetType().GetProperty(property.Name).SetValue(t, listObjectsTransform, null);
+                    /*t.GetType().GetProperty(property.Name).SetValue(t, Convert(classes as List<object>, childType), null);*/
                     continue;
-
-                    /*t.GetType().GetProperty(property.Name).SetValue(t, new List<string> { item.Value as string }, null);
-                    continue;*/
                 }
 
                 // List<object> to List
-                if (typeof(IList).IsAssignableFrom(newT) && typeof(IList<object>).IsAssignableFrom(item.Value.GetType()))
+                if (typeof(IList).IsAssignableFrom(newT) && typeof(IList).IsAssignableFrom(item.Value.GetType()))
                 {
-                    Type childType = newT.GetGenericArguments().FirstOrDefault();
+                    Type childType = IsCollectionType(newT.BaseType) ? 
+                        newT.BaseType.GetGenericArguments().FirstOrDefault() : 
+                        newT.GetGenericArguments().FirstOrDefault();
                     
                     if (childType.IsPrimitive || childType.IsAssignableFrom(typeof(string))) {
                         var genericListType = typeof(List<>).MakeGenericType(childType);
                         IList objs = Activator.CreateInstance(genericListType) as IList;
 
-                        foreach (var obj in item.Value as IList<object>)
+                        foreach (var obj in item.Value as IList)
                         {
                             objs.Add(System.Convert.ChangeType(obj, childType));
                         }
-                        t.GetType().GetProperty(property.Name).SetValue(t, objs, null);
+
+                        var listPrimitive = ConvertCollectionToType(newT, objs);
+                        t.GetType().GetProperty(property.Name).SetValue(t, listPrimitive, null);
+
                         continue;
                     }
 
-                    t.GetType().GetProperty(property.Name).SetValue(t, Convert(item.Value as List<object>, childType), null);
+                    var listObjects = ConvertCollectionToType(newT, Convert(item.Value as List<object>, childType));
+                    t.GetType().GetProperty(property.Name).SetValue(t, listObjects, null);
+
                     continue;
                 }
 
@@ -117,15 +134,22 @@ namespace GraphQl.EfCore.Translate.Converters
             return t;
         }
 
-        public static bool IsNonStringClass(Type type)
-        {
-            if (type == null || type == typeof(string))
-                return false;
-            return type.IsClass;
+        private static object ConvertCollectionToType(Type to, object source) {
+            if (IsCollectionType(to.BaseType))
+            {
+                return Activator.CreateInstance(to, source);
+            }
+
+            return source;
         }
         private static bool IsNullableType(Type t)
         {
             return (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>));
+        }
+
+        private static bool IsCollectionType(Type type)
+        {
+            return (type.GetInterface(nameof(ICollection)) != null);
         }
     }
 }

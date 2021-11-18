@@ -1,5 +1,6 @@
 ﻿using GraphQl.EfCore.Translate;
 using GraphQl.EfCore.Translate.Converters;
+using GraphQl.EfCore.Translate.Where.Graphs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -59,18 +60,7 @@ namespace Tests.Translate.Converters
             Assert.AreNotEqual(null, result, "Return null");
             Assert.AreEqual(typeof(List<WhereExpression>), result.GetType(), "Return other type");
 
-            Func<WhereExpression, WhereExpression, bool>? func = null;
-            func = (x, y) =>
-                x.Path == y.Path &&
-                x.Negate == y.Negate &&
-                x.Case == y.Case &&
-                x.Comparison == y.Comparison &&
-                x.Connector == y.Connector &&
-                x.Value == x.Value &&
-                ((x.GroupedExpressions == null && y.GroupedExpressions == null) ||
-                CompareIEnumerable(x.GroupedExpressions!, y.GroupedExpressions!, func!));
-
-            CompareIEnumerable(new List<WhereExpression> {
+            var list1 = (WhereExpressions)new List<WhereExpression> {
                 new WhereExpression{
                     Path = "Title",
                     Negate = true,
@@ -108,26 +98,10 @@ namespace Tests.Translate.Converters
                 new WhereExpression{
                     Value = new List<string> { "1", "2", "3" }
                 }
-            }, result, func);
-        }
+            };
 
-        private static bool CompareIEnumerable<T>(IEnumerable<T> one, IEnumerable<T> two, Func<T, T, bool> comparisonFunction)
-        {
-            var oneArray = one as T[] ?? one.ToArray();
-            var twoArray = two as T[] ?? two.ToArray();
+            Assert.AreEqual(list1.GetHashCode(), ((WhereExpressions)result!).GetHashCode(), "Not equels objects");
 
-            if (oneArray.Length != twoArray.Length)
-            {
-                Assert.Fail("Collections are not same length");
-            }
-
-            for (int i = 0; i < oneArray.Length; i++)
-            {
-                var isEqual = comparisonFunction(oneArray[i], twoArray[i]);
-                Assert.IsTrue(isEqual);
-            }
-
-            return true;
         }
     }
 }

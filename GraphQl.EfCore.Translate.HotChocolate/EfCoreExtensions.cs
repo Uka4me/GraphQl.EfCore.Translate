@@ -1,5 +1,6 @@
 ﻿using GraphQl.EfCore.Translate.Converters;
 using GraphQl.EfCore.Translate.Select.Graphs;
+using GraphQl.EfCore.Translate.Where.Graphs;
 using HotChocolate.Execution.Processing;
 using HotChocolate.Language;
 using HotChocolate.Resolvers;
@@ -139,20 +140,22 @@ namespace GraphQl.EfCore.Translate.HotChocolate
                         }
 
                         string[] keysArgs = new string[] { "where", "take", "skip", "orderby" };
-                        Dictionary<string, object> args = new Dictionary<string, object>();
-                        foreach (var arg in f.Arguments ?? new List<ArgumentNode>())
+                        //Dictionary<string, object> args = new Dictionary<string, object>();
+                        var args = new ArgumentNodeGraph();
+                        var arguments = (f.Arguments ?? new List<ArgumentNode>()).ToList();
+                        foreach (var arg in arguments.Where(x => keysArgs.Contains(x.Name.Value.ToLower())))
                         {
                             var name = arg.Name.Value.ToLower();
-                            if (!keysArgs.Contains(name.ToLower()))
+                            /*if (!keysArgs.Contains(name.ToLower()))
                             {
                                 continue;
-                            }
+                            }*/
 
                             object value = arg.Value;
 
                             if (arg.Value is VariableNode)
                             {
-                                context.Variables.TryGetVariable(arg.Name.Value, out value);
+                                context.Variables.TryGetVariable(arg.Value.Value.ToString(), out value);
                             }
 
                             if (value is ListValueNode)
@@ -161,7 +164,25 @@ namespace GraphQl.EfCore.Translate.HotChocolate
                                 value = converter.Convert((ListValueNode)value);
                             }
 
+                            if (name == "skip")
+                            {
+                                args.Skip = (value is not null and IValueNode ? int.Parse((value as IValueNode)?.Value?.ToString()) : null);
+                            }
+                            if (name == "take")
+                            {
+                                args.Take = (int?)(value is not null and IValueNode ? int.Parse((value as IValueNode)?.Value?.ToString()) : null);
+                            }
+                            if (name == "orderby")
+                            {
+                                args.OrderBy = (value as IValueNode)?.Value?.ToString();
+                            }
                             if (name == "where")
+                            {
+                                value = Converters.DictionaryToObjectConverter.Convert<WhereExpression>(value);
+                                args.Where = value is null ? null : (List<WhereExpression>)value;
+                            }
+
+                            /*if (name == "where")
                             {
                                 value = Converters.DictionaryToObjectConverter.Convert<WhereExpression>(value as List<object>);
                             }
@@ -169,7 +190,7 @@ namespace GraphQl.EfCore.Translate.HotChocolate
                             if (value != null)
                             {
                                 args.Add(name, value is not null and IValueNode ? (value as IValueNode).Value : value);
-                            }
+                            }*/
                         }
 
                         list.Add(new NodeGraph

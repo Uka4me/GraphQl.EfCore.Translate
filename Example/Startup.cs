@@ -2,9 +2,11 @@ using Entity;
 using Entity.Models;
 using GraphQl.EfCore.Translate.DotNet;
 using GraphQl.EfCore.Translate.HotChocolate;
+using GraphQl.EfCore.Translate.Where.Graphs;
 using GraphQL;
 using GraphQL.DotNet;
 using GraphQL.DotNet.Queries;
+using GraphQL.HotChocolate;
 using GraphQL.HotChocolate.Queries;
 using GraphQL.Server;
 using Microsoft.AspNetCore.Builder;
@@ -15,6 +17,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.Collections.Generic;
 
 namespace GraphQl.EfCore.Translate.Example
 {
@@ -50,6 +53,7 @@ namespace GraphQl.EfCore.Translate.Example
 
             services
                 .AddGraphQLServer()
+                .AddErrorFilter<ErrorFilter>()
                 .AddType<GraphQL.HotChocolate.Types.CourseObject>()
                 .AddType<GraphQL.HotChocolate.Types.EnrollmentObject>()
                 .AddType<GraphQL.HotChocolate.Types.StudentObject>()

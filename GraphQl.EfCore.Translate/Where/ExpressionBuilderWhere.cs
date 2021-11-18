@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using GraphQl.EfCore.Translate.Converters;
+using GraphQl.EfCore.Translate.Where.Graphs;
 
 namespace GraphQl.EfCore.Translate
 {

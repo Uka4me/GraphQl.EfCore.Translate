@@ -2,9 +2,9 @@
 using Entity.Models;
 using HotChocolate.Resolvers;
 using GraphQl.EfCore.Translate.HotChocolate;
-using GraphQl.EfCore.Translate;
 using Entity.Classes;
 using System.Linq.Expressions;
+using GraphQl.EfCore.Translate.Where.Graphs;
 
 namespace GraphQL.HotChocolate.Queries
 {
@@ -37,7 +37,7 @@ namespace GraphQL.HotChocolate.Queries
             return new PageInfo<Student> {
                 Total = total,
                 Data = query.ToList(),
-                CurrentPage = 1/*skip / take*/ //((int)Math.Ceiling((decimal)total / (decimal)take))
+                CurrentPage = 1
             };
         }
 
