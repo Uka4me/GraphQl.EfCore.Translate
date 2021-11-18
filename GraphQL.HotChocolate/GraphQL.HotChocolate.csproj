@@ -7,9 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HotChocolate" Version="12.2.1" />
-    <PackageReference Include="HotChocolate.AspNetCore" Version="12.2.1" />
-    <PackageReference Include="HotChocolate.Data.EntityFramework" Version="12.2.1" />
+    <PackageReference Include="HotChocolate" Version="12.3.0" />
+    <PackageReference Include="HotChocolate.AspNetCore" Version="12.3.0" />
+    <PackageReference Include="HotChocolate.Data.EntityFramework" Version="12.3.0" />
   </ItemGroup>
 
   <ItemGroup>

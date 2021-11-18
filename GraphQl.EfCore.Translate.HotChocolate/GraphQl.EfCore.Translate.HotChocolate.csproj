@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HotChocolate" Version="12.2.0" />
+    <PackageReference Include="HotChocolate" Version="12.3.0" />
 	<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
   </ItemGroup>
 
@@ -27,7 +27,7 @@
 
 	<Target DependsOnTargets="ResolveReferences" Name="CopyProjectReferencesToPackage">
 		<ItemGroup>
-			<BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))"/>
+			<BuildOutputInPackage Include="@(ReferenceCopyLocalPaths-&gt;WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" />
 		</ItemGroup>
 	</Target>
 </Project>

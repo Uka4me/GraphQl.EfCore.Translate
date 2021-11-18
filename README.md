@@ -49,4 +49,4 @@ Install-Package GraphQl.EfCore.Translate.HotChocolate
 
 - GraphQl.EfCore.Translate.HotChocolate
   + net6.0
-  + HotChocolate (>= 12.2.1)
+  + HotChocolate (>= 12.3.0)
