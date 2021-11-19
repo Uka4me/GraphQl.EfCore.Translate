@@ -1,10 +1,12 @@
 ﻿using GraphQl.EfCore.Translate.Converters;
 using GraphQl.EfCore.Translate.Select.Graphs;
 using GraphQl.EfCore.Translate.Where.Graphs;
+using HotChocolate;
 using HotChocolate.Execution.Processing;
 using HotChocolate.Language;
 using HotChocolate.Resolvers;
 using HotChocolate.Utilities;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace GraphQl.EfCore.Translate.HotChocolate
@@ -24,7 +26,7 @@ namespace GraphQl.EfCore.Translate.HotChocolate
 
         public static IQueryable<T> GraphQlWhere<T>(this IQueryable<T> queryable, IResolverContext context)
         {
-            var argument = GetNameArgument<List<WhereExpression>>(context, "where", "Where");
+            var argument = GetNameArgument(context, "where");
             if (argument is not null)
             {
                 var wheres = context.ArgumentValue<List<WhereExpression>>(argument) ?? new List<WhereExpression>();
@@ -44,8 +46,8 @@ namespace GraphQl.EfCore.Translate.HotChocolate
 
         public static IQueryable<T> GraphQlPagination<T>(this IQueryable<T> queryable, IResolverContext context)
         {
-            var argumentTake = GetNameArgument<int>(context, "take", "Take");
-            var argumentSkip = GetNameArgument<int>(context, "skip", "Skip");
+            var argumentTake = GetNameArgument(context, "take");
+            var argumentSkip = GetNameArgument(context, "skip");
             if (argumentTake is not null || argumentSkip is not null)
             {
                 var take = argumentTake is not null ? context.ArgumentValue<int?>(argumentTake) : null;
@@ -59,7 +61,7 @@ namespace GraphQl.EfCore.Translate.HotChocolate
 
         public static IQueryable<T> GraphQlOrder<T>(this IQueryable<T> queryable, IResolverContext context, string defaultOrder = "")
         {
-            var argument = GetNameArgument<string>(context, "orderby", "orderBy", "OrderBy");
+            var argument = GetNameArgument(context, "orderBy");
             if (argument is not null)
             {
                 var orders = context.ArgumentValue<string?>(argument) ?? defaultOrder;
@@ -81,17 +83,15 @@ namespace GraphQl.EfCore.Translate.HotChocolate
             EfCoreExtensions.AddCalculatedField<T>(path, func);
         }
 
-        static string GetNameArgument<T>(IResolverContext context, params string[] names)
+        static string? GetNameArgument(IResolverContext context, string name)
         {
-            return names.FirstOrDefault(name => {
-                try
-                {
-                    return context.ArgumentOptional<T>(name).HasValue;
-                }
-                catch {
-                    return false;
-                }
-            });
+            var arguments = context.GetType().GetProperty("Arguments")?.GetValue(context);
+
+            if (arguments is not null)
+            {
+                return ((IDictionary<NameString, ArgumentValue>)arguments).Select(x => x.Key.Value).FirstOrDefault(x => x.ToLower() == name.ToLower());
+            }
+            return null;
         }
 
         static List<NodeGraph> ConvertFieldToNodeGraph(IEnumerable<object> fields, IResolverContext context, string[]? path = null)
@@ -140,16 +140,11 @@ namespace GraphQl.EfCore.Translate.HotChocolate
                         }
 
                         string[] keysArgs = new string[] { "where", "take", "skip", "orderby" };
-                        //Dictionary<string, object> args = new Dictionary<string, object>();
                         var args = new ArgumentNodeGraph();
                         var arguments = (f.Arguments ?? new List<ArgumentNode>()).ToList();
                         foreach (var arg in arguments.Where(x => keysArgs.Contains(x.Name.Value.ToLower())))
                         {
                             var name = arg.Name.Value.ToLower();
-                            /*if (!keysArgs.Contains(name.ToLower()))
-                            {
-                                continue;
-                            }*/
 
                             object value = arg.Value;
 
@@ -181,16 +176,6 @@ namespace GraphQl.EfCore.Translate.HotChocolate
                                 value = Converters.DictionaryToObjectConverter.Convert<WhereExpression>(value);
                                 args.Where = value is null ? null : (List<WhereExpression>)value;
                             }
-
-                            /*if (name == "where")
-                            {
-                                value = Converters.DictionaryToObjectConverter.Convert<WhereExpression>(value as List<object>);
-                            }
-
-                            if (value != null)
-                            {
-                                args.Add(name, value is not null and IValueNode ? (value as IValueNode).Value : value);
-                            }*/
                         }
 
                         list.Add(new NodeGraph

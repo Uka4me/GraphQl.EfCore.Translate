@@ -34,7 +34,7 @@ namespace GraphQl.EfCore.Translate.DotNet
 
 		public static IQueryable<T> GraphQlWhere<T>(this IQueryable<T> queryable, IResolveFieldContext<object> context)
 		{
-			var argument = GetNameArgument(context, "where", "Where");
+			var argument = GetNameArgument(context, "where");
 			if (argument is not null)
 			{
 				var wheres = context.GetArgument<List<WhereExpression>>(argument)!;
@@ -47,8 +47,8 @@ namespace GraphQl.EfCore.Translate.DotNet
 
 		public static IQueryable<T> GraphQlPagination<T>(this IQueryable<T> queryable, IResolveFieldContext<object> context)
 		{
-			var argumentTake = GetNameArgument(context, "take", "Take");
-			var argumentSkip = GetNameArgument(context, "skip", "Skip");
+			var argumentTake = GetNameArgument(context, "take");
+			var argumentSkip = GetNameArgument(context, "skip");
 			if (argumentTake is not null || argumentSkip is not null) {
 				var take = argumentTake is not null ? context.GetArgument<int?>(argumentTake, null) : null;
 				var skip = argumentSkip is not null ? context.GetArgument<int>(argumentSkip, 0) : 0;
@@ -61,7 +61,7 @@ namespace GraphQl.EfCore.Translate.DotNet
 
 		public static IQueryable<T> GraphQlOrder<T>(this IQueryable<T> queryable, IResolveFieldContext<object> context, string defaultOrder = "")
 		{
-			var argument = GetNameArgument(context, "orderby", "orderBy", "OrderBy");
+			var argument = GetNameArgument(context, "orderBy");
 			if (argument is not null)
 			{
 				var orders = context.GetArgument<string>(argument, defaultOrder);
@@ -80,8 +80,11 @@ namespace GraphQl.EfCore.Translate.DotNet
 			EfCoreExtensions.AddCalculatedField<T>(path, func);
 		}
 
-		static string? GetNameArgument(IResolveFieldContext<object> context, params string[] names) {
-			return names.FirstOrDefault(name => context.HasArgument(name));
+		static string? GetNameArgument(IResolveFieldContext<object> context, string name) {
+			var key = context.Arguments?.Select(x => x.Key).FirstOrDefault(x => x.ToLower() == name.ToLower());
+
+			// TODO: Without calling HasArgument, arguments from Variables are not obtained when calling GetArgument
+			return key is not null && context.HasArgument(key) ? key : null;
 		}
 
 		static List<NodeGraph> ConvertFieldToNodeGraph(IEnumerable<object> fields, IResolveFieldContext<object> context, string[]? path = null)
@@ -128,16 +131,11 @@ namespace GraphQl.EfCore.Translate.DotNet
 						}
 
 						string[] keysArgs = new string[] { "where", "take", "skip", "orderby" };
-						//Dictionary<string, object> args = new Dictionary<string, object>();
 						var args = new ArgumentNodeGraph();
 						var arguments = (f.Arguments ?? new Arguments()).ToList();
 						foreach (var arg in arguments.Where(x => keysArgs.Contains(x.Name.ToLower())))
 						{
 							var name = arg.Name.ToLower();
-							/*if (!keysArgs.Contains(name.ToLower()))
-							{
-								continue;
-							}*/
 
 							var value = arg.Value.Value;
 							var variable = arg.Value as VariableReference;
@@ -164,11 +162,6 @@ namespace GraphQl.EfCore.Translate.DotNet
 								value = DictionaryToObjectConverter.Convert<WhereExpression>(value);
 								args.Where = value is null ? null : (List<WhereExpression>)value;
 							}
-
-							/*if (value != null)
-							{
-								args.Add(name, value);
-							}*/
 						}
 
 						list.Add(new NodeGraph
