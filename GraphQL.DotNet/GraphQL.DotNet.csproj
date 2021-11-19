@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Entity\Entity.csproj" />
     <ProjectReference Include="..\GraphQl.EfCore.Translate.DotNet\GraphQl.EfCore.Translate.DotNet.csproj" />
+    <ProjectReference Include="..\GraphQl.EfCore.Translate\GraphQl.EfCore.Translate.csproj" />
   </ItemGroup>
 
 </Project>

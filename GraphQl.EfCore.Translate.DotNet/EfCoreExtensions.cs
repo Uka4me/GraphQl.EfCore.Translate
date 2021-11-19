@@ -75,11 +75,6 @@ namespace GraphQl.EfCore.Translate.DotNet
 			return queryable;
 		}
 
-		public static void AddCalculatedField<T>(string path, Func<Expression, Expression> func)
-		{
-			EfCoreExtensions.AddCalculatedField<T>(path, func);
-		}
-
 		static string? GetNameArgument(IResolveFieldContext<object> context, string name) {
 			var key = context.Arguments?.Select(x => x.Key).FirstOrDefault(x => x.ToLower() == name.ToLower());
 

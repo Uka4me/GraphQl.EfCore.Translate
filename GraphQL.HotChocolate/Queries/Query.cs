@@ -5,20 +5,31 @@ using GraphQl.EfCore.Translate.HotChocolate;
 using Entity.Classes;
 using System.Linq.Expressions;
 using GraphQl.EfCore.Translate.Where.Graphs;
+using GraphQl.EfCore.Translate;
 
 namespace GraphQL.HotChocolate.Queries
 {
     public class Query
     {
         public Query() {
-            EfCoreExtensionsHotChocolate.AddCalculatedField<Student>("CalculatedField", (source) => {
+
+            EfCoreExtensions.AddCalculatedField<Student, string>(
+                x => x.CalculatedField,
+                x => @"The ""calculatedField2"" field contains the number of evaluations equal to A for all its subjects"
+            );
+            EfCoreExtensions.AddCalculatedField<Student, int>(
+                x => x.CalculatedField2,
+                x => x.Enrollments.Count(e => e.Grade == Grade.A)
+            );
+
+            /*EfCoreExtensions.AddCalculatedField<Student>("CalculatedField", (source) => {
                 return Expression.Constant("The \"calculatedField2\" field contains the number of evaluations equal to A for all its subjects", typeof(string));
             });
-            EfCoreExtensionsHotChocolate.AddCalculatedField<Student>("CalculatedField2", (source) => {
+            EfCoreExtensions.AddCalculatedField<Student>("CalculatedField2", (source) => {
                 var parameter = (ParameterExpression)source;
                 Expression<Func<Student, int>> func = x => x.Enrollments.Count(e => e.Grade == Grade.A);
                 return Expression.Lambda(Expression.Invoke(func, parameter), parameter).Body;
-            });
+            });*/
         }
 
         [UseDbContext(typeof(SchoolContext))]

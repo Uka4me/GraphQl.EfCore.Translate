@@ -7,6 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using GraphQl.EfCore.Translate;
 
 namespace GraphQL.DotNet.Queries
 {
@@ -41,14 +42,23 @@ namespace GraphQL.DotNet.Queries
 			InitializeEnrollmentQuery();
 			InitializeStudentQuery();
 
-			EfCoreExtensionsDotNet.AddCalculatedField<Student>("CalculatedField", (source) => {
-				return Expression.Constant("The \"calculatedField2\" field contains the number of evaluations equal to A for all its subjects", typeof(string));
-			});
-			EfCoreExtensionsDotNet.AddCalculatedField<Student>("CalculatedField2", (source) => {
-				var parameter = (ParameterExpression)source;
-				Expression<Func<Student, int>> func = x => x.Enrollments.Count(e => e.Grade == Grade.A);
-				return Expression.Lambda(Expression.Invoke(func, parameter), parameter).Body;
-			});
+			EfCoreExtensions.AddCalculatedField<Student, string>(
+				x => x.CalculatedField,
+				x => @"The ""calculatedField2"" field contains the number of evaluations equal to A for all its subjects"
+			);
+			EfCoreExtensions.AddCalculatedField<Student, int>(
+				x => x.CalculatedField2,
+				x => x.Enrollments.Count(e => e.Grade == Grade.A)
+			);
+
+			/*EfCoreExtensions.AddCalculatedField<Student>("CalculatedField", (source) => {
+                return Expression.Constant("The \"calculatedField2\" field contains the number of evaluations equal to A for all its subjects", typeof(string));
+            });
+            EfCoreExtensions.AddCalculatedField<Student>("CalculatedField2", (source) => {
+                var parameter = (ParameterExpression)source;
+                Expression<Func<Student, int>> func = x => x.Enrollments.Count(e => e.Grade == Grade.A);
+                return Expression.Lambda(Expression.Invoke(func, parameter), parameter).Body;
+            });*/
 		}
 	}
 }

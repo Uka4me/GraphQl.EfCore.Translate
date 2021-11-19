@@ -78,11 +78,6 @@ namespace GraphQl.EfCore.Translate.HotChocolate
             return queryable;
         }
 
-        public static void AddCalculatedField<T>(string path, Func<Expression, Expression> func)
-        {
-            EfCoreExtensions.AddCalculatedField<T>(path, func);
-        }
-
         static string? GetNameArgument(IResolverContext context, string name)
         {
             var arguments = context.GetType().GetProperty("Arguments")?.GetValue(context);

@@ -7,7 +7,7 @@
 	<RepositoryUrl>https://github.com/Uka4me/GraphQl.EfCore.Translate</RepositoryUrl>
 	<PackageTags>GraphQL; EntityFrameworkCore; .NetCore; graphql-dotnet</PackageTags>
 	<PackageLicenseExpression>MIT</PackageLicenseExpression>
-	<Version>3.0.1</Version>
+	<Version>3.1.1</Version>
 	<TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
 	<Authors>Uka4me</Authors>
 	<Description>The package adds extensions to EntityFrameworkCore that allow you to transform a GraphQL query into an EntityFrameworkCore query. The project solves the problem of a large amount of data dumping, filtering related data and adding calculated fields. The library is designed to work with GraphQL and HotChocolate projects.</Description>
