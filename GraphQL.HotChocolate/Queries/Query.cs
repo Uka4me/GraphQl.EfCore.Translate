@@ -21,15 +21,6 @@ namespace GraphQL.HotChocolate.Queries
                 x => x.CalculatedField2,
                 x => x.Enrollments.Count(e => e.Grade == Grade.A)
             );
-
-            /*EfCoreExtensions.AddCalculatedField<Student>("CalculatedField", (source) => {
-                return Expression.Constant("The \"calculatedField2\" field contains the number of evaluations equal to A for all its subjects", typeof(string));
-            });
-            EfCoreExtensions.AddCalculatedField<Student>("CalculatedField2", (source) => {
-                var parameter = (ParameterExpression)source;
-                Expression<Func<Student, int>> func = x => x.Enrollments.Count(e => e.Grade == Grade.A);
-                return Expression.Lambda(Expression.Invoke(func, parameter), parameter).Body;
-            });*/
         }
 
         [UseDbContext(typeof(SchoolContext))]
