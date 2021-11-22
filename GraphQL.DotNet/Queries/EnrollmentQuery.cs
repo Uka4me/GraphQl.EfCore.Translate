@@ -20,7 +20,7 @@ namespace GraphQL.DotNet.Queries
 				  var dbContextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<SchoolContext>>();
 				  SchoolContext dbContext = dbContextFactory.CreateDbContext();
 
-				  var query = dbContext.Enrollments
+				  var query = dbContext.Enrollments.AsNoTracking()
 							  .GraphQlWhere(context)
 							  .GraphQlOrder(context)
 							  .GraphQlPagination(context)

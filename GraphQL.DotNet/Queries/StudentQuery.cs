@@ -23,7 +23,7 @@ namespace GraphQL.DotNet.Queries
 				  var dbContextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<SchoolContext>>();
 				  SchoolContext dbContext = dbContextFactory.CreateDbContext();
 
-				  var query = dbContext.Students
+				  var query = dbContext.Students.AsNoTracking()
 							  .GraphQlWhere(context)
 							  .GraphQlOrder(context)
 							  .GraphQlPagination(context)
@@ -41,7 +41,7 @@ namespace GraphQL.DotNet.Queries
 				  var dbContextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<SchoolContext>>();
 				  SchoolContext dbContext = dbContextFactory.CreateDbContext();
 
-				  var query = dbContext.Students
+				  var query = dbContext.Students.AsNoTracking()
 							  .GraphQlWhere(context).AsQueryable();
 
 				  var total = query.Count();

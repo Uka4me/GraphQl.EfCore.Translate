@@ -6,6 +6,7 @@ using Entity.Classes;
 using System.Linq.Expressions;
 using GraphQl.EfCore.Translate.Where.Graphs;
 using GraphQl.EfCore.Translate;
+using Microsoft.EntityFrameworkCore;
 
 namespace GraphQL.HotChocolate.Queries
 {
@@ -26,7 +27,7 @@ namespace GraphQL.HotChocolate.Queries
         [UseDbContext(typeof(SchoolContext))]
         public PageInfo<Student> GetPageStudents([ScopedService] SchoolContext dbContext, IResolverContext context, int take = 0, int skip = 0, string orderBy = "", List<WhereExpression>? where = default)
         {
-            var query = dbContext.Students
+            var query = dbContext.Students.AsNoTracking()
                 .GraphQlWhere(context).AsQueryable();
 
             var total = query.Count();
@@ -45,43 +46,34 @@ namespace GraphQL.HotChocolate.Queries
 
         [UseDbContext(typeof(SchoolContext))]
         public List<Student> GetStudents([ScopedService] SchoolContext dbContext, IResolverContext context, int take = 0, int skip = 0, string orderBy = "", List<WhereExpression>? where = default) {
-            var n = dbContext.Students
+            return dbContext.Students.AsNoTracking()
                 .GraphQlWhere(context)
                 .GraphQlOrder(context)
                 .GraphQlPagination(context)
                 .GraphQlSelect(context)
                 .ToList();
-
-
-            return n;
         }
 
         [UseDbContext(typeof(SchoolContext))]
         public List<Course> GetCourses([ScopedService] SchoolContext dbContext, IResolverContext context, int take = 0, int skip = 0, string orderBy = "", List<WhereExpression>? where = default)
         {
-            var n = dbContext.Courses
+            return dbContext.Courses.AsNoTracking()
                 .GraphQlWhere(context)
                 .GraphQlOrder(context)
                 .GraphQlPagination(context)
                 .GraphQlSelect(context)
                 .ToList();
-
-
-            return n;
         }
 
         [UseDbContext(typeof(SchoolContext))]
         public List<Enrollment> GetEnrollments([ScopedService] SchoolContext dbContext, IResolverContext context, int take = 0, int skip = 0, string orderBy = "", List<WhereExpression>? where = default)
         {
-            var n = dbContext.Enrollments
+            return dbContext.Enrollments.AsNoTracking()
                 .GraphQlWhere(context)
                 .GraphQlOrder(context)
                 .GraphQlPagination(context)
                 .GraphQlSelect(context)
                 .ToList();
-
-
-            return n;
         }
     }
 }
