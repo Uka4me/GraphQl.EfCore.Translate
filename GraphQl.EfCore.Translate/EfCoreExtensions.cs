@@ -9,25 +9,19 @@ namespace GraphQl.EfCore.Translate
 {
 	public static class EfCoreExtensions
 	{
-		/*public static void AddCalculatedField<T>(string path, Func<Expression, Expression> func)
-		{
-			ExpressionBuilderSelect<T>.AddCalculatedField(path.ToLower(), func);
-		}*/
-
-		public static void AddCalculatedField<TSource>(string path, Func<Expression, Expression> func)
-		{
-			ExpressionBuilderSelect<TSource>.AddCalculatedField(path.ToLower(), func);
-		}
-
 		public static void AddCalculatedField<TSource, TValue>(
 			Expression<Func<TSource, TValue>> selector,
 			Expression<Func<TSource, TValue>> func
 		) where TSource : class
 		{
 			var expression = (MemberExpression)selector.Body;
-			string name = expression.Member.Name.ToLower();
+			string name = expression.Member.Name;
 
-			ExpressionBuilderSelect<TSource>.AddCalculatedField(name, (source) => {
+			if (expression.Member.ReflectedType != typeof(TSource)) {
+				throw new ArgumentException($@"AddCalculatedField: The property ({name}) must be of class ""{typeof(TSource).Name}""");
+			}
+
+			ExpressionBuilderSelect<TSource>.AddCalculatedField(name.ToLower(), (source) => {
 				var parameter = (ParameterExpression)source;
 				return Expression.Lambda(Expression.Invoke(func, parameter), parameter).Body;
 			});
