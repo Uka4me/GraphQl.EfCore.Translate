@@ -37,7 +37,7 @@ namespace GraphQl.EfCore.Translate.HotChocolate
             return queryable;
         }
 
-        public static IQueryable<T> GraphQlSelect<T>(this IQueryable<T> queryable, IResolverContext context, string? path = null/*, IEnumerable<object> fields = null*/)
+        public static IQueryable<T> GraphQlSelect<T>(this IQueryable<T> queryable, IResolverContext context, string? path = null)
         {
             var root = ((Selection)context.Selection).SelectionSet?.Selections.AsEnumerable();
             var items = ConvertFieldToNodeGraph(root, context, path is not null ? path.Split('.') : null);
