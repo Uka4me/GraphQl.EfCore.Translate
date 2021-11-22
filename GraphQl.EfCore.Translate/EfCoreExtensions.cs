@@ -14,10 +14,10 @@ namespace GraphQl.EfCore.Translate
 			Expression<Func<TSource, TValue>> func
 		) where TSource : class
 		{
-			var expression = (MemberExpression)selector.Body;
-			string name = expression.Member.Name;
+			var body = selector.Body as MemberExpression;
+			string name = body.Member.Name;
 
-			if (expression.Member.ReflectedType != typeof(TSource)) {
+			if (body.Member.ReflectedType != typeof(TSource)) {
 				throw new ArgumentException($@"AddCalculatedField: The property ({name}) must be of class ""{typeof(TSource).Name}""");
 			}
 

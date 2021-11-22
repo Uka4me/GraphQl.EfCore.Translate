@@ -3,7 +3,6 @@ using Entity.Models;
 using HotChocolate.Resolvers;
 using GraphQl.EfCore.Translate.HotChocolate;
 using Entity.Classes;
-using System.Linq.Expressions;
 using GraphQl.EfCore.Translate.Where.Graphs;
 using GraphQl.EfCore.Translate;
 using Microsoft.EntityFrameworkCore;

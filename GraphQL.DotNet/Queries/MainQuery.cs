@@ -1,12 +1,8 @@
 ﻿using Entity.Models;
 using GraphQl.EfCore.Translate.DotNet;
 using GraphQL.Types;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 using GraphQl.EfCore.Translate;
 
 namespace GraphQL.DotNet.Queries
