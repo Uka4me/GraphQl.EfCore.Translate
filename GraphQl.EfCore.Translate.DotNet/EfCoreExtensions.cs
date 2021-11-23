@@ -141,6 +141,10 @@ namespace GraphQl.EfCore.Translate.DotNet
 										: null;
 							}
 
+							if (value is null) {
+								continue;
+							}
+
 							if (name == "skip")
 							{
 								args.Skip = (int?)value;

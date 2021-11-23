@@ -154,13 +154,18 @@ namespace GraphQl.EfCore.Translate.HotChocolate
                                 value = converter.Convert((ListValueNode)value);
                             }
 
+                            if (value is null)
+                            {
+                                continue;
+                            }
+
                             if (name == "skip")
                             {
-                                args.Skip = (value is not null and IValueNode ? int.Parse((value as IValueNode)?.Value?.ToString()) : null);
+                                args.Skip = (value is IValueNode ? int.Parse((value as IValueNode)?.Value?.ToString()) : null);
                             }
                             if (name == "take")
                             {
-                                args.Take = (int?)(value is not null and IValueNode ? int.Parse((value as IValueNode)?.Value?.ToString()) : null);
+                                args.Take = (int?)(value is IValueNode ? int.Parse((value as IValueNode)?.Value?.ToString()) : null);
                             }
                             if (name == "orderby")
                             {
