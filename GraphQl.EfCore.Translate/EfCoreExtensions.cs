@@ -9,22 +9,35 @@ namespace GraphQl.EfCore.Translate
 {
 	public static class EfCoreExtensions
 	{
+		public static void AddCalculatedField<TSource>(Expression<Func<TSource, object>> selector, Func<Expression, Expression> func)
+		{
+			string name = GetNameProperty<TSource>(selector);
+			ExpressionBuilderSelect<TSource>.AddCalculatedField(name.ToLower(), func);
+		}
+
 		public static void AddCalculatedField<TSource, TValue>(
 			Expression<Func<TSource, TValue>> selector,
 			Expression<Func<TSource, TValue>> func
 		) where TSource : class
 		{
-			var body = selector.Body as MemberExpression;
-			string name = body.Member.Name;
-
-			if (body.Member.ReflectedType != typeof(TSource)) {
-				throw new ArgumentException($@"AddCalculatedField: The property ({name}) must be of class ""{typeof(TSource).Name}""");
-			}
+			string name = GetNameProperty<TSource>(selector);
 
 			ExpressionBuilderSelect<TSource>.AddCalculatedField(name.ToLower(), (source) => {
 				var parameter = (ParameterExpression)source;
 				return Expression.Lambda(Expression.Invoke(func, parameter), parameter).Body;
 			});
+		}
+
+		static string GetNameProperty<TSource>(Expression selector) {
+			var body = (selector as LambdaExpression).Body as MemberExpression;
+			string name = body.Member.Name;
+
+			if (body.Member.ReflectedType != typeof(TSource))
+			{
+				throw new ArgumentException($@"AddCalculatedField: The property ({name}) must be of class ""{typeof(TSource).Name}""");
+			}
+
+			return name;
 		}
 
 		public static IQueryable<T> GraphQlSelect<T>(IQueryable<T> queryable, List<NodeGraph> fields)
