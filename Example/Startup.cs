@@ -1,14 +1,15 @@
 using Entity;
 using Entity.Models;
 using GraphQl.EfCore.Translate.DotNet;
-using GraphQl.EfCore.Translate.HotChocolate;
-using GraphQl.EfCore.Translate.Where.Graphs;
+/*using GraphQl.EfCore.Translate.HotChocolate;
+using GraphQl.EfCore.Translate.Where.Graphs;*/
 using GraphQL;
 using GraphQL.DotNet;
 using GraphQL.DotNet.Queries;
+/*using GraphQL.Execution;
 using GraphQL.HotChocolate;
 using GraphQL.HotChocolate.Queries;
-using GraphQL.Server;
+using GraphQL.Server;*/
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -40,16 +41,20 @@ namespace GraphQl.EfCore.Translate.Example
             services.AddSingleton<MainQuery>();
             services.AddSingleton<GraphQLSchema>();
 
-            services
+            /*services
                 .AddGraphQL()
-                .AddGraphTypes(ServiceLifetime.Scoped)
+                //.AddGraphTypes(ServiceLifetime.Scoped)
                 .AddSystemTextJson()
-                .AddGraphTypes(typeof(GraphQLSchema));
+                .AddGraphTypes(typeof(GraphQLSchema));*/
+            services.AddGraphQL(b => b
+                .AddSystemTextJson()
+                .AddSchema<GraphQLSchema>()
+            );
             // ===========================================================
 
 
             // HotChocolate ==============================================
-            services.AddEFCoreGraphQLHotChocolate();
+            /*services.AddEFCoreGraphQLHotChocolate();
 
             services
                 .AddGraphQLServer()
@@ -58,7 +63,7 @@ namespace GraphQl.EfCore.Translate.Example
                 .AddType<GraphQL.HotChocolate.Types.EnrollmentObject>()
                 .AddType<GraphQL.HotChocolate.Types.StudentObject>()
                 .AddType<GraphQL.HotChocolate.Types.PageInfoObject<GraphQL.HotChocolate.Types.StudentObject, Student>>()
-                .AddQueryType<Query>();
+                .AddQueryType<Query>();*/
             // ===========================================================
         }
 
@@ -75,7 +80,7 @@ namespace GraphQl.EfCore.Translate.Example
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGraphQL<GraphQLSchema>("/dotnet");
-                endpoints.MapGraphQL("/hotchocolate");
+                /*endpoints.MapGraphQL("/hotchocolate");*/
             });
         }
     }

@@ -15,40 +15,43 @@ namespace Tests.Translate.DotNet
     [TestClass]
     public class EfCoreExtensions
     {
+        private readonly DocumentExecuter documentExecuter = new DocumentExecuter();
+        private readonly GraphQLSerializer serializer = new GraphQLSerializer(indent: true);
+
         [TestMethod]
         public async Task CommonQuery()
         {
-            var documentExecuter = new DocumentExecuter();
             var executionResult = await documentExecuter.ExecuteAsync(_ =>
             {
                 _.Schema = new GraphQlSchema();
-                _.Query = @"
-                fragment personData on Person {
-                  name
-                  age
-                }
-                query($where1: [WhereExpression], $where2: [WhereExpression]) {
-                    request(
-                        skip: 1,
-                        take: 2,
-                        orderBy: ""Name desc""
-                        where: $where1
-                    ){
-                        name
-                        employees(
-                            skip: 2,
-                            take: 1,
-                            orderBy: ""Name""
-                            where: $where2
+                _.Query = """
+                    fragment personData on Person {
+                      name
+                      age
+                    }
+                    query($where1: [WhereExpression], $where2: [WhereExpression]) {
+                        request(
+                            skip: 0,
+                            take: 2,
+                            orderBy: "Name desc"
+                            where: $where1
                         ){
-                            ...personData
-                            company{
-                                name
+                            name
+                            employees(
+                                skip: 0,
+                                take: 1,
+                                orderBy: "Name"
+                                where: $where2
+                            ){
+                                ...personData
+                                company{
+                                    name
+                                }
                             }
                         }
                     }
-                }";
-                _.Inputs = new Dictionary<string, object> {
+                """;
+                _.Variables = new Dictionary<string, object?> {
                     { "where1", new List<object> {
                         new Dictionary<string, object>{
                             { "path", "Name"},
@@ -67,7 +70,67 @@ namespace Tests.Translate.DotNet
                 }.ToInputs();
             });
 
-            Assert.AreEqual(executionResult.Errors?.Count ?? 0, 0);
+            AssertSuccessResult(
+                executionResult,
+                """
+                {
+                  "data": {
+                    "request": [
+                      {
+                        "name": "Company 1",
+                        "employees": [
+                          {
+                            "name": "Person 1",
+                            "age": 12,
+                            "company": null
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+                """
+            );
+        }
+
+        [TestMethod]
+        public async Task EmptyQuery()
+        {
+            var executionResult = await documentExecuter.ExecuteAsync(_ =>
+            {
+                _.Schema = new GraphQlSchema();
+                _.Query = """
+                    query {
+                        request {
+                            name
+                        }
+                    }
+                """;
+            });
+
+            AssertSuccessResult(
+                executionResult,
+                """
+                {
+                  "data": {
+                    "request": [
+                      {
+                        "name": "Company 1"
+                      },
+                      {
+                        "name": "Company 2"
+                      }
+                    ]
+                  }
+                }
+                """
+            );
+        }
+
+        private void AssertSuccessResult(ExecutionResult executionResult, string expected)
+        {
+            Assert.AreEqual(0, executionResult.Errors?.Count ?? 0);
+            Assert.AreEqual(expected, serializer.Serialize(executionResult));
         }
 
         private class GraphQlSchema : Schema
@@ -82,9 +145,8 @@ namespace Tests.Translate.DotNet
         {
             public Query()
             {
-                Field<ListGraphType<CompanyObject>>(
-                  "request",
-                  arguments: new QueryArguments(new List<QueryArgument>
+                Field<ListGraphType<CompanyObject>>("request")
+                  .Arguments(new QueryArguments(new List<QueryArgument>
                   {
                         new QueryArgument<IntGraphType>
                         {
@@ -102,11 +164,8 @@ namespace Tests.Translate.DotNet
                         {
                             Name = "where"
                         }
-                  }),
-                  resolve: context => {
-                      return companies.AsQueryable().GraphQl(context).ToList();
-                  }
-              );
+                  }))
+                  .Resolve(context => companies.AsQueryable().GraphQl(context).ToList());
             }
 
             readonly List<Company> companies = new()

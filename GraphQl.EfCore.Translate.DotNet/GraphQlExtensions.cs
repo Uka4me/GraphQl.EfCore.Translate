@@ -1,5 +1,5 @@
 ﻿using GraphQL;
-using GraphQL.Language.AST;
+using GraphQLParser.AST;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,11 +9,11 @@ namespace GraphQl.EfCore.Translate.DotNet;
 public static class GraphQlExtensions
 {
     //TODO: remove in v16 to drop support for quoted enum values
-    public static IValue TryToEnumValue(this IValue value)
+    public static GraphQLValue TryToEnumValue(this GraphQLValue value)
     {
-        if (value is StringValue stringValue)
+        if (value is GraphQLStringValue stringValue)
         {
-            return new EnumValue(stringValue.Value);
+            // return new GraphQLEnumValue(stringValue.Value);
         }
 
         return value;

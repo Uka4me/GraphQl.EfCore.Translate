@@ -5,6 +5,7 @@ using HotChocolate;
 using HotChocolate.Execution.Processing;
 using HotChocolate.Language;
 using HotChocolate.Resolvers;
+using HotChocolate.Types;
 using HotChocolate.Utilities;
 using System.Linq;
 using System.Linq.Expressions;
@@ -67,12 +68,10 @@ namespace GraphQl.EfCore.Translate.HotChocolate
                 var orders = context.ArgumentValue<string?>(argument) ?? defaultOrder;
 
                 return EfCoreExtensions.GraphQlOrder(queryable, orders);
-                /*queryable = queryable.OrderBy(orders);*/
             }
             else if (!string.IsNullOrWhiteSpace(defaultOrder))
             {
                 return EfCoreExtensions.GraphQlOrder(queryable, defaultOrder);
-                /*queryable = queryable.OrderBy(defaultOrder);*/
             }
 
             return queryable;
@@ -80,13 +79,11 @@ namespace GraphQl.EfCore.Translate.HotChocolate
 
         static string? GetNameArgument(IResolverContext context, string name)
         {
-            var arguments = context.GetType().GetProperty("Arguments")?.GetValue(context);
+            IReadOnlyDictionary<string, ArgumentValue>? arguments = (IReadOnlyDictionary<string, ArgumentValue>?)context.GetType().GetProperty("Arguments")?.GetValue(context);
 
-            if (arguments is not null)
-            {
-                return ((IDictionary<NameString, ArgumentValue>)arguments).Select(x => x.Key.Value).FirstOrDefault(x => x.ToLower() == name.ToLower());
-            }
-            return null;
+            var key = arguments?.Select(x => x.Key).FirstOrDefault(x => x.ToLower() == name.ToLower());
+
+            return key is not null && arguments is not null && context.ArgumentKind(key) is not ValueKind.Null ? key : null;
         }
 
         static List<NodeGraph> ConvertFieldToNodeGraph(IEnumerable<object> fields, IResolverContext context, string[]? path = null)
@@ -97,13 +94,15 @@ namespace GraphQl.EfCore.Translate.HotChocolate
             UnpackFragments = (objects) =>
             {
                 List<FieldNode> listFields = new List<FieldNode>();
-                foreach (var obj in objects)
+                foreach (NamedSyntaxNode obj in objects)
                 {
                     if (obj is FragmentSpreadNode)
                     {
-                        var h = context.Document.Definitions
-                        .Single(x => (x is FragmentDefinitionNode) && x.Kind == SyntaxKind.FragmentDefinition && (x as FragmentDefinitionNode).Name.Value == (obj as FragmentSpreadNode).Name.Value);
-                        listFields.AddRange(UnpackFragments((h as FragmentDefinitionNode).SelectionSet.Selections));
+                        var fragment = context.Operation.Document.Definitions.OfType<FragmentDefinitionNode>().FirstOrDefault(t => t.Name.Value.EqualsOrdinal(obj.Name.Value));
+                        if (fragment is not null) {
+                            listFields.AddRange(UnpackFragments!(fragment.SelectionSet.Selections));
+                        }
+                        
                         continue;
                     }
 
@@ -137,46 +136,48 @@ namespace GraphQl.EfCore.Translate.HotChocolate
                         string[] keysArgs = new string[] { "where", "take", "skip", "orderby" };
                         var args = new ArgumentNodeGraph();
                         var arguments = (f.Arguments ?? new List<ArgumentNode>()).ToList();
-                        foreach (var arg in arguments.Where(x => keysArgs.Contains(x.Name.Value.ToLower())))
-                        {
-                            var name = arg.Name.Value.ToLower();
 
-                            object value = arg.Value;
+                        arguments.ForEach(arg => {
 
-                            if (arg.Value is VariableNode)
-                            {
-                                context.Variables.TryGetVariable(arg.Value.Value.ToString(), out value);
+                            string name = arg.Name.Value.ToLower();
+                            IValueNode? value = arg.Value;
+
+                            if (!keysArgs.Contains(name) || value is null) {
+                                return;
                             }
 
-                            if (value is ListValueNode)
+                            if (value is VariableNode)
                             {
-                                var converter = new ObjectValueToDictionaryConverter();
-                                value = converter.Convert((ListValueNode)value);
-                            }
-
-                            if (value is null)
-                            {
-                                continue;
+                                context.Variables.TryGetVariable(value.Value.ToString(), out value);
                             }
 
                             if (name == "skip")
                             {
-                                args.Skip = (value is IValueNode ? int.Parse((value as IValueNode)?.Value?.ToString()) : null);
+                                args.Skip = (value as IntValueNode)?.ToInt32();
+                                return;
                             }
                             if (name == "take")
                             {
-                                args.Take = (int?)(value is IValueNode ? int.Parse((value as IValueNode)?.Value?.ToString()) : null);
+                                args.Take = (value as IntValueNode)?.ToInt32();
+                                return;
                             }
                             if (name == "orderby")
                             {
-                                args.OrderBy = (value as IValueNode)?.Value?.ToString();
+                                args.OrderBy = (value as StringValueNode)?.Value.ToString();
+                                return;
                             }
                             if (name == "where")
                             {
-                                value = Converters.DictionaryToObjectConverter.Convert<WhereExpression>(value);
-                                args.Where = value is null ? null : (List<WhereExpression>)value;
+                                object? v = value;
+                                if (value is ListValueNode)
+                                {
+                                    v = new ObjectValueToDictionaryConverter().Convert(value as ListValueNode);
+                                }
+
+                                args.Where = Converters.DictionaryToObjectConverter.Convert<WhereExpression>(v);
+                                return;
                             }
-                        }
+                        });
 
                         list.Add(new NodeGraph
                         {
@@ -187,7 +188,7 @@ namespace GraphQl.EfCore.Translate.HotChocolate
 
                     if (f.SelectionSet is not null && f.SelectionSet.Selections.Count() > 0)
                     {
-                        TransformationFieldToNodeGraph(f.SelectionSet!.Selections.AsEnumerable(), key, depth + 1);
+                        TransformationFieldToNodeGraph!(f.SelectionSet.Selections.AsEnumerable(), key, depth + 1);
                     }
                 }
             };

@@ -1,4 +1,4 @@
-﻿using GraphQL.Language.AST;
+﻿using GraphQLParser.AST;
 using GraphQL.Types;
 using System;
 
@@ -13,13 +13,13 @@ namespace GraphQl.EfCore.Translate.DotNet
             AddValue("OrdinalIgnoreCase", null, StringComparison.OrdinalIgnoreCase);
         }*/
 
-        public override bool CanParseLiteral(IValue value)
+        public override bool CanParseLiteral(GraphQLValue value)
         {
             value = value.TryToEnumValue();
             return base.CanParseLiteral(value);
         }
 
-        public override object? ParseLiteral(IValue value)
+        public override object? ParseLiteral(GraphQLValue value)
         {
             //Name = nameof(StringComparison);
             //var literal = base.ParseLiteral(value);
@@ -29,7 +29,7 @@ namespace GraphQl.EfCore.Translate.DotNet
                 return literal;
             }
 
-            if (value is StringValue str)
+            if (value is GraphQLStringValue str)
             {
                 if (Enum.TryParse(str.Value, true, out StringComparison comparison))
                 {

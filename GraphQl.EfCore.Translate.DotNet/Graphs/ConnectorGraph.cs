@@ -1,4 +1,4 @@
-﻿using GraphQL.Language.AST;
+﻿using GraphQLParser.AST;
 using GraphQL.Types;
 using GraphQl.EfCore.Translate;
 using System;
@@ -14,13 +14,13 @@ namespace GraphQl.EfCore.Translate.DotNet
             AddValue("or", null, Connector.Or);
         }*/
 
-        public override bool CanParseLiteral(IValue value)
+        public override bool CanParseLiteral(GraphQLValue value)
         {
             value = value.TryToEnumValue();
             return base.CanParseLiteral(value);
         }
 
-        public override object? ParseLiteral(IValue value)
+        public override object? ParseLiteral(GraphQLValue value)
         {
             var literal = base.ParseLiteral(value.TryToEnumValue());
 
@@ -29,7 +29,7 @@ namespace GraphQl.EfCore.Translate.DotNet
                 return literal;
             }
 
-            if (value is StringValue str)
+            if (value is GraphQLStringValue str)
             {
                 var strValue = str.Value;
                 if (Enum.TryParse(strValue, true, out Connector comparison))

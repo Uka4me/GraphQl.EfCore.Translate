@@ -4,6 +4,7 @@ using HotChocolate;
 using HotChocolate.Execution;
 using HotChocolate.Resolvers;
 using HotChocolate.Types;
+using HotChocolate.Types.Relay;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -18,11 +19,11 @@ namespace Tests.Translate.HotChocolate
     [TestClass]
     public class EfCoreExtensions
     {
-        [TestMethod]
-        public async Task CommonQuery()
+        private readonly IRequestExecutor documentExecuter;
+
+        public EfCoreExtensions()
         {
-            IRequestExecutor executor =
-                await new ServiceCollection()
+            documentExecuter = new ServiceCollection()
                     .AddGraphQL()
                     .AddQueryType<Query>()
                     .AddType<CaseStringGraph>()
@@ -33,24 +34,27 @@ namespace Tests.Translate.HotChocolate
                     .AddType<PersonObject>()
                     .Services
                     .BuildServiceProvider()
-                    .GetRequestExecutorAsync();
+                    .GetRequestExecutorAsync().GetAwaiter().GetResult();
+        }
 
-            IExecutionResult executionResult = await executor
-                .ExecuteAsync(@"
+        [TestMethod]
+        public async Task CommonQuery()
+        {
+            QueryResult executionResult = (QueryResult)await documentExecuter.ExecuteAsync(@"
                 fragment personData on Person {
                   name
                   age
                 }
                 query($where1: [WhereExpression!], $where2: [WhereExpression!]) {
                     request(
-                        skip: 1,
+                        skip: 0,
                         take: 2,
                         orderBy: ""Name desc""
                         where: $where1
                     ){
                         name
                         employees(
-                            skip: 2,
+                            skip: 0,
                             take: 1,
                             orderBy: ""Name""
                             where: $where2
@@ -61,8 +65,8 @@ namespace Tests.Translate.HotChocolate
                             }
                         }
                     }
-                }", (IReadOnlyDictionary<string, object?>)new Dictionary<string, object?> {
-                    { "where1", new List<object> { 
+                }", new Dictionary<string, object?> {
+                    { "where1", new List<object> {
                         new Dictionary<string, object?>{
                             { "path", "Name"},
                             { "case", "IGNORE"},
@@ -79,12 +83,70 @@ namespace Tests.Translate.HotChocolate
                     }}
                 });
 
-            Assert.AreEqual(executionResult.Errors?.Count ?? 0, 0);
+            AssertSuccessResult(
+                executionResult,
+                """
+                {
+                  "data": {
+                    "request": [
+                      {
+                        "name": "Company 1",
+                        "employees": [
+                          {
+                            "name": "Person 1",
+                            "age": 12,
+                            "company": null
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+                """
+            );
+        }
+
+        [TestMethod]
+        public async Task EmptyQuery()
+        {
+            QueryResult executionResult = (QueryResult)await documentExecuter.ExecuteAsync(
+                """
+                    query {
+                        request {
+                            name
+                        }
+                    }
+                """
+                );
+
+            AssertSuccessResult(
+                executionResult,
+                """
+                {
+                  "data": {
+                    "request": [
+                      {
+                        "name": "Company 1"
+                      },
+                      {
+                        "name": "Company 2"
+                      }
+                    ]
+                  }
+                }
+                """
+            );
+        }
+
+        private void AssertSuccessResult(QueryResult executionResult, string expected)
+        {
+            Assert.AreEqual(0, executionResult.Errors?.Count ?? 0);
+            Assert.AreEqual(expected, executionResult.ToJson());
         }
 
         public class Query
         {
-            public List<Company> GetRequest(IResolverContext context, int take = 0, int skip = 0, string orderBy = "", List<WhereExpression>? where = default)
+            public List<Company> GetRequest(IResolverContext context, int? take = null, int? skip = null, string? orderBy = null, List<WhereExpression>? where = default)
             {
                 return companies.AsQueryable().GraphQl(context).ToList();
             }

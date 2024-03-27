@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HotChocolate" Version="12.3.2" />
-    <PackageReference Include="HotChocolate.AspNetCore" Version="12.3.2" />
-    <PackageReference Include="HotChocolate.Data.EntityFramework" Version="12.3.2" />
+    <PackageReference Include="HotChocolate" Version="13.9.0" />
+    <PackageReference Include="HotChocolate.AspNetCore" Version="13.9.0" />
+    <PackageReference Include="HotChocolate.Data.EntityFramework" Version="13.9.0" />
   </ItemGroup>
 
   <ItemGroup>

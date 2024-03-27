@@ -2,14 +2,11 @@
 using GraphQl.EfCore.Translate.Select.Graphs;
 using GraphQl.EfCore.Translate.Where.Graphs;
 using GraphQL;
-using GraphQL.Language.AST;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using GraphQL.Types;
+using GraphQL.Validation;
+using GraphQLParser;
+using GraphQLParser.AST;
+using System.Globalization;
 
 namespace GraphQl.EfCore.Translate.DotNet
 {
@@ -28,7 +25,8 @@ namespace GraphQl.EfCore.Translate.DotNet
 
 		public static IQueryable<T> GraphQlSelect<T>(this IQueryable<T> queryable, IResolveFieldContext<object> context, string? path = null)
 		{
-			var items = ConvertFieldToNodeGraph(context.SubFields.Select(x => x.Value), context, path is not null ? path.Split('.') : null);
+			var items = ConvertFieldToNodeGraph(context.SubFields.Select(x => x.Value.Item1), context, path is not null ? path.Split('.') : null);
+			// var items = new List<NodeGraph>();
 			return EfCoreExtensions.GraphQlSelect(queryable, items);
 		}
 
@@ -82,29 +80,32 @@ namespace GraphQl.EfCore.Translate.DotNet
 			return key is not null && context.HasArgument(key) ? key : null;
 		}
 
-		static List<NodeGraph> ConvertFieldToNodeGraph(IEnumerable<object> fields, IResolveFieldContext<object> context, string[]? path = null)
+		static List<NodeGraph> ConvertFieldToNodeGraph(IEnumerable<ASTNode> fields, IResolveFieldContext<object> context, string[]? path = null)
 		{
 			HashSet<NodeGraph> list = new HashSet<NodeGraph>();
 
-			Func<IEnumerable<object>, IEnumerable<Field>> UnpackFragments = null;
+			Func<IEnumerable<ASTNode>, IEnumerable<GraphQLField>> UnpackFragments = null;
 			UnpackFragments = (objects) => {
-				List<Field> listFields = new List<Field>();
+				List<GraphQLField> listFields = new List<GraphQLField>();
 				foreach (var obj in objects)
 				{
-					if (obj is FragmentSpread)
+					if (obj is GraphQLFragmentSpread)
 					{
-						var h = context.Document.Fragments.FindDefinition((obj as FragmentSpread).Name);
-						listFields.AddRange(UnpackFragments(h.SelectionSet.Children));
+						var fragment = context.Document.FindFragmentDefinition(((GraphQLFragmentSpread) obj).FragmentName.Name);
+						if (fragment is not null) {
+                            listFields.AddRange(UnpackFragments!(fragment.SelectionSet.Selections));
+                        }
+
 						continue;
 					}
 
-					listFields.Add(obj as Field);
+					listFields.Add(obj as GraphQLField);
 				}
 
 				return listFields;
 			};
 
-			Action<IEnumerable<object>, string, int> TransformationFieldToNodeGraph = null;
+			Action<IEnumerable<ASTNode>, string, int> TransformationFieldToNodeGraph = null;
 			TransformationFieldToNodeGraph = (t, keys, depth) =>
 			{
 				foreach (var f in UnpackFragments(t))
@@ -127,41 +128,43 @@ namespace GraphQl.EfCore.Translate.DotNet
 
 						string[] keysArgs = new string[] { "where", "take", "skip", "orderby" };
 						var args = new ArgumentNodeGraph();
-						var arguments = (f.Arguments ?? new Arguments()).ToList();
-						foreach (var arg in arguments.Where(x => keysArgs.Contains(x.Name.ToLower())))
-						{
-							var name = arg.Name.ToLower();
 
-							var value = arg.Value.Value;
-							var variable = arg.Value as VariableReference;
-							if (variable != null)
-							{
-								value = context.Variables != null
-										? context.Variables.ValueFor(variable.Name)
-										: null;
-							}
+                        var arguments = (f.Arguments ?? new GraphQLArguments(new List<GraphQLArgument>())).ToList();
 
-							if (value is null) {
-								continue;
-							}
+                        arguments.ForEach(arg => {
 
-							if (name == "skip")
-							{
-								args.Skip = (int?)value;
-							}
-							if (name == "take")
-							{
-								args.Take = (int?)value;
-							}
-							if (name == "orderby")
-							{
-								args.OrderBy = value?.ToString();
-							}
-							if (name == "where") {
-								value = DictionaryToObjectConverter.Convert<WhereExpression>(value);
-								args.Where = value is null ? null : (List<WhereExpression>)value;
-							}
-						}
+                            string name = arg.Name.StringValue.ToLower();
+                            object? value = arg.Value;
+
+                            if (!keysArgs.Contains(name) || value is null)
+                            {
+                                return;
+                            }
+
+                            if (value is GraphQLVariable)
+                            {
+                                value = context.Variables?.ValueFor(((GraphQLVariable)value).Name.StringValue, null);
+                            }
+
+                            if (name == "skip")
+                            {
+                                args.Skip = int.Parse((value as GraphQLIntValue).Value.ToString(), NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint | NumberStyles.AllowExponent, CultureInfo.InvariantCulture); // Int.Parse(value);
+
+                            }
+                            if (name == "take")
+                            {
+                                args.Take = int.Parse((value as GraphQLIntValue).Value.ToString(), NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint | NumberStyles.AllowExponent, CultureInfo.InvariantCulture);
+                            }
+                            if (name == "orderby")
+                            {
+                                args.OrderBy = (value as GraphQLStringValue).Value.ToString();
+                            }
+                            if (name == "where")
+                            {
+                                value = DictionaryToObjectConverter.Convert<WhereExpression>(value);
+                                args.Where = value is null ? null : (List<WhereExpression>)value;
+                            }
+                        });
 
 						list.Add(new NodeGraph
 						{
@@ -170,9 +173,9 @@ namespace GraphQl.EfCore.Translate.DotNet
 						});
 					}
 
-					if (f.SelectionSet.Children.Count() > 0)
+					if (f.SelectionSet is not null && f.SelectionSet.Selections.Count() > 0)
 					{
-						TransformationFieldToNodeGraph(f.SelectionSet.Children, key, depth + 1);
+                        TransformationFieldToNodeGraph!(f.SelectionSet.Selections, key, depth + 1);
 					}
 				}
 			};

@@ -44,7 +44,7 @@ using GraphQl.EfCore.Translate.HotChocolate;
 ...
 
 [UseDbContext(typeof(SchoolContext))]
-public List<Student> GetStudents([ScopedService] SchoolContext dbContext, IResolverContext context, int take = 0, int skip = 0, string orderBy = "", List<WhereExpression>? where = default) {
+public List<Student> GetStudents([ScopedService] SchoolContext dbContext, IResolverContext context, int? take = null, int? skip = null, string? orderBy = null, List<WhereExpression>? where = default) {
     var query = dbContext.Students.GraphQl(context);
     // Or
     /* var query = dbContext.Students

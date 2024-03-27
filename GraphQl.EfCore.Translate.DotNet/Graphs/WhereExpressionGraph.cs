@@ -10,11 +10,14 @@ namespace GraphQl.EfCore.Translate.DotNet
         {
             Name = nameof(WhereExpression);
             Field(x => x.Path, true);
-            Field<ComparisonGraph>("Comparison", null, null, _ => _.Source!.Comparison);
+            Field<ComparisonGraph>("Comparison");
+            // Field<ComparisonGraph>("Comparison", null, null, _ => _.Source!.Comparison);
             Field(x => x.Negate, true);
-            Field<CaseStringGraph>("Case", null, null, _ => _.Source!.Case);
+            Field<CaseStringGraph>("Case");
+            // Field<CaseStringGraph>("Case", null, null, _ => _.Source!.Case);
             Field(x => x.Value, true);
-            Field<ConnectorGraph>("Connector", null, null, _ => _.Source!.Connector);
+            Field<ConnectorGraph>("Connector");
+            // Field<ConnectorGraph>("Connector", null, null, _ => _.Source!.Connector);
             Field<ListGraphType<WhereExpressionGraph>>(
                 name: "GroupedExpressions");
         }
